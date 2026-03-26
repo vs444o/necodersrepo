@@ -3,7 +3,7 @@
 <head>
   <title>HelpNow</title>
   {% load static %}
-  <link rel="stylesheet" href="{% static 'style.css' %}">
+<link rel="stylesheet" href="{% static 'style.css' %}">
 </head>
 <body>
 
@@ -13,9 +13,11 @@
     </div>
     <div class="div-right">
       <a href="/">Home</a>
-      <a href="/find/">Find a Need</a>
-      <a href="/post/">Post a Need</a>
-
+      {% if user.user_type == "worker" %}
+        <a href="/find/">Find a Need</a>
+      {% elif user.user_type == "needer" %}
+        <a href="/post/">Post a Need</a>
+      {% endif %}
       {% if user.is_authenticated %}
       <span>{{ user.username }} — {% if user.user_type == 'worker' %}Volunteer/Worker{% else %}Help Needer{% endif %}</span>
       <form action="{% url 'logout' %}" method="post" style="display:inline">
