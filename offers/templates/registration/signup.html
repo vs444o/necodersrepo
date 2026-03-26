@@ -7,6 +7,25 @@
     <form method="post" class="app-form auth-form">
         {% csrf_token %}
         <h1>Create account</h1>
+        {{ form.non_field_errors }}
+
+        <p>{{ form.username.label_tag }} {{ form.username }}</p>
+        <p>{{ form.email.label_tag }} {{ form.email }}</p>
+        <p>{{ form.user_type.label_tag }} {{ form.user_type }}</p>
+        <p>{{ form.password1.label_tag }} {{ form.password1 }}</p>
+        <p>{{ form.password2.label_tag }} {{ form.password2 }}</p>
+
+        <p>
+            {{ form.address.label_tag }}
+            {{ form.address }}
+            <small class="help-text">Start typing and choose a Bulgarian address suggestion.</small>
+            {% if form.address.errors %}{{ form.address.errors }}{% endif %}
+        </p>
+        {{ form.latitude }}
+        {{ form.longitude }}
+
+        <ul id="address-suggestions" class="address-suggestions"></ul>
+        <p id="address-source-note" class="help-text"></p>
 
         {% if form.errors %}
             <div class="form-errors" role="alert">
@@ -22,4 +41,132 @@
         </p>
     </form>
 </section>
+
+<script>
+(() => {
+    const addressInput = document.getElementById("id_address_input");
+    const latInput = document.getElementById("id_latitude");
+    const lngInput = document.getElementById("id_longitude");
+    const suggestions = document.getElementById("address-suggestions");
+    const sourceNote = document.getElementById("address-source-note");
+    const googleApiKey = "{{ google_maps_api_key|default:''|escapejs }}";
+    let debounceTimer = null;
+
+    if (!addressInput || !suggestions || !latInput || !lngInput) {
+        return;
+    }
+
+    const clearSuggestions = () => {
+        suggestions.innerHTML = "";
+    };
+
+    const runFallbackAutocomplete = () => {
+        sourceNote.textContent = "Using OpenStreetMap suggestions (fallback mode).";
+
+        addressInput.addEventListener("input", () => {
+            const query = addressInput.value.trim();
+            latInput.value = "";
+            lngInput.value = "";
+            clearSuggestions();
+
+            if (query.length < 3) {
+                return;
+            }
+
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(async () => {
+                try {
+                    const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(query)}&addressdetails=1&limit=5`;
+                    const bgUrl = `${url}&countrycodes=bg`;
+                    const response = await fetch(bgUrl, {
+                        headers: { "Accept": "application/json" }
+                    });
+
+                    if (!response.ok) {
+                        return;
+                    }
+
+                    const data = await response.json();
+                    data.forEach((item) => {
+                        const li = document.createElement("li");
+                        li.textContent = item.display_name;
+                        li.className = "address-suggestion-item";
+                        li.addEventListener("click", () => {
+                            addressInput.value = item.display_name;
+                            latInput.value = item.lat;
+                            lngInput.value = item.lon;
+                            clearSuggestions();
+                        });
+                        suggestions.appendChild(li);
+                    });
+                } catch (error) {
+                    // Keep silent in UI for autocomplete failures.
+                }
+            }, 300);
+        });
+    };
+
+    const runGoogleAutocomplete = () => {
+        sourceNote.textContent = "Using Google Maps suggestions.";
+        clearSuggestions();
+        addressInput.setAttribute("autocomplete", "off");
+        const autocomplete = new google.maps.places.Autocomplete(addressInput, {
+            componentRestrictions: { country: "bg" },
+            fields: ["formatted_address", "geometry"],
+            types: ["address"],
+        });
+
+        autocomplete.addListener("place_changed", () => {
+            const place = autocomplete.getPlace();
+            if (!place || !place.geometry || !place.geometry.location) {
+                latInput.value = "";
+                lngInput.value = "";
+                return;
+            }
+
+            addressInput.value = place.formatted_address || addressInput.value;
+            latInput.value = place.geometry.location.lat();
+            lngInput.value = place.geometry.location.lng();
+        });
+
+        addressInput.addEventListener("input", () => {
+            latInput.value = "";
+            lngInput.value = "";
+        });
+    };
+
+    if (googleApiKey) {
+        window.__initSignupGooglePlaces = () => {
+            if (window.google && google.maps && google.maps.places) {
+                runGoogleAutocomplete();
+                return;
+            }
+            runFallbackAutocomplete();
+        };
+
+        const script = document.createElement("script");
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleApiKey)}&libraries=places&callback=__initSignupGooglePlaces`;
+        script.async = true;
+        script.defer = true;
+        script.onerror = runFallbackAutocomplete;
+        document.head.appendChild(script);
+    } else {
+        runFallbackAutocomplete();
+    }
+
+    document.addEventListener("click", (event) => {
+        if (!suggestions.contains(event.target) && event.target !== addressInput) {
+            clearSuggestions();
+        }
+    });
+
+    addressInput.addEventListener("blur", () => {
+        const query = addressInput.value.trim();
+        if (!query) {
+            latInput.value = "";
+            lngInput.value = "";
+        }
+    });
+})();
+</script>
 {% endblock %}

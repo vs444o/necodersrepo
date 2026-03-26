@@ -31,6 +31,7 @@ class Offer(models.Model):
     description = models.TextField()               # details
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
     offer_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    address = models.CharField(max_length=200, blank=True, default='')
     price = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
 
     # Plan calls this "address".
@@ -86,6 +87,9 @@ class User(AbstractUser):
         ('needer', 'Help Needer'),
     )
     user_type = models.CharField(max_length=10, choices=USER_TYPES, default='needer')
+    address = models.CharField(max_length=255, blank=True)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
 
     def __str__(self):
         return self.username    

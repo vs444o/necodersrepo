@@ -3,6 +3,8 @@ from django.contrib.auth import login
 from django.shortcuts import get_object_or_404, redirect, render
 from django.http import HttpResponseForbidden
 from django.utils import timezone
+from django.conf import settings
+import math
 
 from .forms import ExtendedUserCreationForm
 from .models import Offer
@@ -15,11 +17,59 @@ def home(request):
 
 @login_required
 def find(request):
-    """List requests based on user role."""
-    if getattr(request.user, 'user_type', None) == 'needer':
-        offers = Offer.objects.filter(created_by=request.user).order_by('-created_at')
+    """List of all requests/needs."""
+    offers = list(Offer.objects.select_related('created_by').all())
+
+    is_worker = getattr(request.user, 'user_type', None) == 'worker'
+    has_worker_coordinates = request.user.latitude is not None and request.user.longitude is not None
+
+    if is_worker and has_worker_coordinates:
+        worker_lat = float(request.user.latitude)
+        worker_lng = float(request.user.longitude)
+
+        def haversine_km(lat1, lon1, lat2, lon2):
+            # Great-circle distance in kilometers.
+            radius_km = 6371.0
+            d_lat = math.radians(lat2 - lat1)
+            d_lon = math.radians(lon2 - lon1)
+            a = (
+                math.sin(d_lat / 2) ** 2
+                + math.cos(math.radians(lat1))
+                * math.cos(math.radians(lat2))
+                * math.sin(d_lon / 2) ** 2
+            )
+            c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
+            return radius_km * c
+
+        for offer in offers:
+            offer.distance_km = None
+            creator = offer.created_by
+            if (
+                offer.status == 'waiting'
+                and creator is not None
+                and creator.latitude is not None
+                and creator.longitude is not None
+            ):
+                offer.distance_km = round(
+                    haversine_km(
+                        worker_lat,
+                        worker_lng,
+                        float(creator.latitude),
+                        float(creator.longitude),
+                    ),
+                    1,
+                )
+
+        def offer_sort_key(offer):
+            waiting_rank = 0 if offer.status == 'waiting' else 1
+            has_distance_rank = 0 if getattr(offer, 'distance_km', None) is not None else 1
+            distance_value = offer.distance_km if getattr(offer, 'distance_km', None) is not None else float('inf')
+            return (waiting_rank, has_distance_rank, distance_value, -offer.created_at.timestamp())
+
+        offers.sort(key=offer_sort_key)
     else:
-        offers = Offer.objects.all().order_by('-created_at')
+        offers.sort(key=lambda offer: offer.created_at, reverse=True)
+
     return render(request, 'offers/find.html', {'offers': offers})
 
 
@@ -94,4 +144,11 @@ def signup_view(request):
     else:
         form = ExtendedUserCreationForm()
 
-    return render(request, 'registration/signup.html', {'form': form})
+    return render(
+        request,
+        'registration/signup.html',
+        {
+            'form': form,
+            'google_maps_api_key': settings.GOOGLE_MAPS_API_KEY,
+        },
+    )
