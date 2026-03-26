@@ -409,6 +409,28 @@ a {
     color: var(--muted);
 }
 
+.address-suggestions {
+    list-style: none;
+    padding: 0;
+    margin: 0 0 0.9rem;
+    border-radius: 12px;
+}
+
+.address-suggestion-item {
+    cursor: pointer;
+    padding: 0.55rem 0.7rem;
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    background: var(--surface-soft);
+    margin-bottom: 0.35rem;
+    color: var(--text);
+}
+
+.address-suggestion-item:hover {
+    background: var(--secondary);
+    border-color: #a8c4ef;
+}
+
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,

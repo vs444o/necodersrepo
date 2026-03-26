@@ -21,7 +21,12 @@
             <dl class="meta-grid">
                 <div>
                     <dt>Location</dt>
-                    <dd>{{ offer.location }}</dd>
+                    <dd>
+                        {{ offer.location }}
+                        {% if offer.distance_km is not None %}
+                            ({{ offer.distance_km }} km away)
+                        {% endif %}
+                    </dd>
                 </div>
                 <div>
                     <dt>Category</dt>
