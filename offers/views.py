@@ -11,24 +11,21 @@ from .models import Offer
 
 
 def home(request):
-    """Landing page."""
     return render(request, 'offers/home.html')
 
 
 @login_required
 def find(request):
-    """List of all requests/needs."""
     offers = list(Offer.objects.select_related('created_by').all())
 
     is_worker = getattr(request.user, 'user_type', None) == 'worker'
-    has_worker_coordinates = request.user.latitude is not None and request.user.longitude is not None
+    has_coords = request.user.latitude is not None and request.user.longitude is not None
 
-    if is_worker and has_worker_coordinates:
+    if is_worker and has_coords:
         worker_lat = float(request.user.latitude)
         worker_lng = float(request.user.longitude)
 
         def haversine_km(lat1, lon1, lat2, lon2):
-            # Great-circle distance in kilometers.
             radius_km = 6371.0
             d_lat = math.radians(lat2 - lat1)
             d_lon = math.radians(lon2 - lon1)
@@ -38,44 +35,35 @@ def find(request):
                 * math.cos(math.radians(lat2))
                 * math.sin(d_lon / 2) ** 2
             )
-            c = 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
-            return radius_km * c
+            return radius_km * 2 * math.atan2(math.sqrt(a), math.sqrt(1 - a))
 
         for offer in offers:
             offer.distance_km = None
-            creator = offer.created_by
             if (
                 offer.status == 'waiting'
-                and creator is not None
-                and creator.latitude is not None
-                and creator.longitude is not None
+                and offer.latitude is not None
+                and offer.longitude is not None
             ):
                 offer.distance_km = round(
-                    haversine_km(
-                        worker_lat,
-                        worker_lng,
-                        float(creator.latitude),
-                        float(creator.longitude),
-                    ),
-                    1,
+                    haversine_km(worker_lat, worker_lng, float(offer.latitude), float(offer.longitude)), 1
                 )
 
-        def offer_sort_key(offer):
-            waiting_rank = 0 if offer.status == 'waiting' else 1
-            has_distance_rank = 0 if getattr(offer, 'distance_km', None) is not None else 1
-            distance_value = offer.distance_km if getattr(offer, 'distance_km', None) is not None else float('inf')
-            return (waiting_rank, has_distance_rank, distance_value, -offer.created_at.timestamp())
-
-        offers.sort(key=offer_sort_key)
+        offers.sort(key=lambda o: (
+            0 if o.status == 'waiting' else 1,
+            0 if o.distance_km is not None else 1,
+            o.distance_km if o.distance_km is not None else float('inf'),
+            -o.created_at.timestamp(),
+        ))
     else:
-        offers.sort(key=lambda offer: offer.created_at, reverse=True)
+        for offer in offers:
+            offer.distance_km = None
+        offers.sort(key=lambda o: o.created_at, reverse=True)
 
     return render(request, 'offers/find.html', {'offers': offers})
 
 
 @login_required
 def post_offer(request):
-    """Create a new help request (MVP)."""
     if request.method == 'POST':
         offer = Offer.objects.create(
             name=request.user.username,
@@ -86,16 +74,20 @@ def post_offer(request):
             offer_type=request.POST['offer_type'],
             price=request.POST.get('price') or None,
             location=request.POST['location'],
+            latitude=request.POST.get('latitude') or None,
+            longitude=request.POST.get('longitude') or None,
             status='waiting',
         )
         return redirect('find')
 
-    return render(request, 'offers/post_offer.html', {'categories': Offer.CATEGORY_CHOICES})
+    return render(request, 'offers/post_offer.html', {
+        'categories': Offer.CATEGORY_CHOICES,
+        'google_maps_api_key': settings.GOOGLE_MAPS_API_KEY,
+    })
 
 
 @login_required
 def accept_offer(request, pk):
-    """Worker accepts a waiting request."""
     if request.method != 'POST':
         return redirect('find')
 
@@ -115,7 +107,6 @@ def accept_offer(request, pk):
 
 @login_required
 def complete_offer(request, pk):
-    """Worker marks an accepted request as completed."""
     if request.method != 'POST':
         return redirect('find')
 
@@ -134,7 +125,6 @@ def complete_offer(request, pk):
 
 
 def signup_view(request):
-    """Create a new user account."""
     if request.method == 'POST':
         form = ExtendedUserCreationForm(request.POST)
         if form.is_valid():
@@ -144,11 +134,7 @@ def signup_view(request):
     else:
         form = ExtendedUserCreationForm()
 
-    return render(
-        request,
-        'registration/signup.html',
-        {
-            'form': form,
-            'google_maps_api_key': settings.GOOGLE_MAPS_API_KEY,
-        },
-    )
+    return render(request, 'registration/signup.html', {
+        'form': form,
+        'google_maps_api_key': settings.GOOGLE_MAPS_API_KEY,
+    })
