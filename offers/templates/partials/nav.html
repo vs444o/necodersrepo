@@ -7,8 +7,10 @@
             {% if user.is_authenticated %}
                 {% if user.user_type == "worker" %}
                     <a class="nav-link" href="{% url 'find' %}">Find requests</a>
+                    <a href="{% url 'my_jobs' %}">My Jobs</a>
                 {% elif user.user_type == "needer" %}
                     <a class="nav-link" href="{% url 'post_offer' %}">Post a request</a>
+                    <a href="{% url 'my_posts' %}">My Posts</a>
                 {% endif %}
 
                 <span class="user-pill">{{ user.username }} ({{ user.user_type|title }})</span>

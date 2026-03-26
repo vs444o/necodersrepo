@@ -88,3 +88,33 @@ class User(AbstractUser):
 
     def __str__(self):
         return self.username
+
+class Application(models.Model):
+    STATUS_CHOICES = [
+        ('pending',  'Pending'),    
+        ('accepted', 'Accepted'),   
+        ('rejected', 'Rejected'),   
+    ]
+
+    offer  = models.ForeignKey(Offer, on_delete=models.CASCADE, related_name='applications')
+    worker = models.ForeignKey('User', on_delete=models.CASCADE, related_name='applications')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    created_at = models.DateTimeField(auto_now_add=True)
+ 
+    class Meta:
+        unique_together = ('offer', 'worker')
+ 
+    def __str__(self):
+        return f"{self.worker.username} → {self.offer.title}"
+ 
+class Notification(models.Model):
+    user    = models.ForeignKey('User', on_delete=models.CASCADE, related_name='notifications')
+    message = models.CharField(max_length=300)
+    read    = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+ 
+    class Meta:
+        ordering = ['-created_at']   # newest first
+ 
+    def __str__(self):
+        return f"{'READ' if self.read else 'UNREAD'} → {self.user.username}: {self.message[:50]}"

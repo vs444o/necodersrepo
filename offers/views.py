@@ -7,7 +7,7 @@ from django.conf import settings
 import math
 
 from .forms import ExtendedUserCreationForm
-from .models import Offer
+from .models import Offer, Application, Notification   # ← added Notification
 
 
 def home(request):
@@ -17,6 +17,15 @@ def home(request):
 @login_required
 def find(request):
     offers = list(Offer.objects.select_related('created_by').all())
+
+    if request.user.user_type == 'worker':
+        already_applied_ids = set(
+            Application.objects
+            .filter(worker=request.user)
+            .values_list('offer_id', flat=True)
+        )
+    else:
+        already_applied_ids = set()
 
     is_worker = getattr(request.user, 'user_type', None) == 'worker'
     has_coords = request.user.latitude is not None and request.user.longitude is not None
@@ -59,7 +68,10 @@ def find(request):
             offer.distance_km = None
         offers.sort(key=lambda o: o.created_at, reverse=True)
 
-    return render(request, 'offers/find.html', {'offers': offers})
+    return render(request, 'offers/find.html', {
+        'offers': offers,
+        'already_applied_ids': already_applied_ids,
+    })
 
 
 @login_required
@@ -84,6 +96,33 @@ def post_offer(request):
         'categories': Offer.CATEGORY_CHOICES,
         'google_maps_api_key': settings.GOOGLE_MAPS_API_KEY,
     })
+
+
+@login_required
+def apply_offer(request, pk):
+    if request.method != 'POST':
+        return redirect('find')
+
+    if request.user.user_type != 'worker':
+        return HttpResponseForbidden('Only workers can apply.')
+
+    offer = get_object_or_404(Offer, pk=pk)
+
+    if offer.status != 'waiting':
+        return redirect('find')
+
+    application, created = Application.objects.get_or_create(
+        offer=offer,
+        worker=request.user,
+    )
+
+    if created and offer.created_by:
+        Notification.objects.create(
+            user=offer.created_by,
+            message=f"{request.user.username} applied for your request: {offer.title}",
+        )
+
+    return redirect('find')
 
 
 @login_required
@@ -123,6 +162,27 @@ def complete_offer(request, pk):
     offer.save(update_fields=['status', 'completed_by', 'completed_at'])
     return redirect('find')
 
+@login_required
+def my_posts(request):
+    if request.user.user_type != 'needer':
+        return HttpResponseForbidden('This page is only for needers.')
+
+    offers = (
+        Offer.objects
+        .filter(created_by=request.user)
+        .prefetch_related('applications__worker')
+        .order_by('-created_at')
+    )
+
+    unread = list(request.user.notifications.filter(read=False))
+
+    request.user.notifications.filter(read=False).update(read=True)
+
+    return render(request, 'offers/my_posts.html', {
+        'offers': offers,
+        'unread': unread,       # shown as banners at the top
+    })
+
 
 def signup_view(request):
     if request.method == 'POST':
@@ -138,3 +198,59 @@ def signup_view(request):
         'form': form,
         'google_maps_api_key': settings.GOOGLE_MAPS_API_KEY,
     })
+
+@login_required
+def accept_application(request, pk):
+    if request.method != 'POST':
+        return redirect('my_posts')
+
+    if request.user.user_type != 'needer':
+        return HttpResponseForbidden('Only needers can accept applications.')
+
+    application = get_object_or_404(Application, pk=pk)
+    offer = application.offer
+
+    if offer.created_by != request.user:
+        return HttpResponseForbidden('You can only manage your own posts.')
+
+    if offer.status != 'waiting':
+        return redirect('my_posts')
+
+    application.status = 'accepted'
+    application.save(update_fields=['status'])
+
+    Application.objects.filter(
+        offer=offer
+    ).exclude(pk=application.pk).update(status='rejected')
+
+    offer.status = 'accepted'
+    offer.accepted_by = application.worker
+    offer.accepted_at = timezone.now()
+    offer.save(update_fields=['status', 'accepted_by', 'accepted_at'])
+
+    Notification.objects.create(
+        user=application.worker,
+        message=f"You were accepted for: {offer.title}!",
+    )
+
+    return redirect('my_posts')    
+
+@login_required
+def my_jobs(request):
+    if request.user.user_type != 'worker':
+        return HttpResponseForbidden('This page is only for workers.')
+
+    applications = (
+        Application.objects
+        .filter(worker=request.user)
+        .select_related('offer', 'offer__created_by')
+        .order_by('-created_at')
+    )
+
+    unread = list(request.user.notifications.filter(read=False))
+    request.user.notifications.filter(read=False).update(read=True)
+
+    return render(request, 'offers/my_jobs.html', {
+        'applications': applications,
+        'unread': unread,
+    })    

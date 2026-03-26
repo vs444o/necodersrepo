@@ -23,8 +23,12 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('find/', views.find, name='find'),
     path('post/', views.post_offer, name='post_offer'),
-    path('offer/<int:pk>/accept/', views.accept_offer, name='accept_offer'),
+    path('offer/<int:pk>/accept/', views.accept_offer, name='accept_offer'),  
     path('offer/<int:pk>/complete/', views.complete_offer, name='complete_offer'),
+    path('offer/<int:pk>/apply/', views.apply_offer, name='apply_offer'),
     path('signup/', views.signup_view, name='signup'),
     path('accounts/', include('django.contrib.auth.urls')),
+    path('my-posts/', views.my_posts, name='my_posts'),
+    path('application/<int:pk>/accept/', views.accept_application, name='accept_application'),
+    path('my-jobs/', views.my_jobs, name='my_jobs'),
 ]
