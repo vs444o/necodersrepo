@@ -7,6 +7,13 @@
     <form method="post" class="app-form auth-form">
         {% csrf_token %}
         <h1>Create account</h1>
+
+        {% if form.errors %}
+            <div class="form-errors" role="alert">
+                Please fix the highlighted fields below.
+            </div>
+        {% endif %}
+
         {{ form.as_p }}
         <button type="submit" class="btn btn--primary btn--block">Create account</button>
 

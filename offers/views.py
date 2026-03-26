@@ -15,8 +15,11 @@ def home(request):
 
 @login_required
 def find(request):
-    """List of all requests/needs."""
-    offers = Offer.objects.all().order_by('-created_at')
+    """List requests based on user role."""
+    if getattr(request.user, 'user_type', None) == 'needer':
+        offers = Offer.objects.filter(created_by=request.user).order_by('-created_at')
+    else:
+        offers = Offer.objects.all().order_by('-created_at')
     return render(request, 'offers/find.html', {'offers': offers})
 
 
