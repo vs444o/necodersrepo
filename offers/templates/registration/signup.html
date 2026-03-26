@@ -1,38 +1,48 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Sign up - HelpNow</title>
-  {% load static %}
-  <link rel="stylesheet" href="{% static 'style.css' %}">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sign up - HelpNow</title>
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'style.css' %}">
 </head>
 <body>
-  <nav>
-    <div class="div-center">
-      <a href="/">Welcome to HelpNow</a>
-    </div>
-    <div class="div-right">
-      <a href="/">Home</a>
-      <a href="/find/">Find a Need</a>
-      <a href="/post/">Post a Need</a>
+    <nav>
+        <div class="div-center">
+            <a href="/">Welcome to HelpNow</a>
+        </div>
+        <div class="div-right">
+            <a href="/">Home</a>
+            <a href="/find/">Find a Need</a>
+            <a href="/post/">Post a Need</a>
 
-      {% if user.is_authenticated %}
-  <span>{{ user.username }} — {% if user.user_type == 'worker' %}Volunteer/Worker{% else %}Help Needer{% endif %}</span>
-  <form action="{% url 'logout' %}" method="post" style="display:inline">
-    {% csrf_token %}
-    <button type="submit">Logout</button>
-  </form>
-{% else %}
-        <a href="{% url 'login' %}"><button>Login</button></a>
-        <a href="{% url 'signup' %}"><button>Register Now</button></a>
-      {% endif %}
-    </div>
-  </nav>
+            {% if user.is_authenticated %}
+                <span>{{ user.username }} — {% if user.user_type == 'worker' %}Volunteer{% else %}Needer{% endif %}</span>
+                <form action="{% url 'logout' %}" method="post" style="display:inline">
+                    {% csrf_token %}
+                    <a href="#" onclick="this.closest('form').submit(); return false;">Logout</a>
+                </form>
+            {% else %}
+                <a href="{% url 'login' %}">Login</a>
+                <a href="{% url 'signup' %}">Register Now</a>
+            {% endif %}
+        </div>
+    </nav>
 
-  <h1>Register</h1>
-  <form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Create account</button>
-  </form>
+    <div class="signup-section">
+        <form method="post">
+            {% csrf_token %}
+            <h1>Register</h1>
+            
+            {{ form.as_p }}
+            
+            <button type="submit">Create account</button>
+            
+            <div class="form-footer">
+                Already have an account? <a href="{% url 'login' %}">Login here</a>
+            </div>
+        </form>
+    </div>
 </body>
 </html>

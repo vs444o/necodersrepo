@@ -48,78 +48,104 @@ nav .div-right {
     gap: 25px;
 }
 
-/* Nav Links - Resetting button defaults to normal text */
+/* Keep tiny navbar forms (e.g. logout) from inheriting big form-card styling */
+nav form {
+    background: transparent;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    width: auto;
+    max-width: none;
+    box-shadow: none;
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+}
+nav .div-right button {
+    background: #0984e3;
+    color: white;
+    border: none;
+    padding: 8px 16px; /* Small, proportional padding */
+    border-radius: 10px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    width: auto; /* Prevents it from being full-width */
+    box-shadow: 0 4px 10px rgba(9, 132, 227, 0.15);
+}
+
+nav .div-right button:hover {
+    background: #0072c6;
+    transform: translateY(-1px);
+}
 nav .div-right a {
     text-decoration: none;
     color: #636e72;
     font-weight: 500;
     font-size: 0.95rem;
     transition: all 0.3s ease;
-    background: transparent !important;
-    border: none !important;
-    padding: 0 !important;
-    cursor: pointer;
 }
 
 nav .div-right a:hover {
     color: #0984e3;
-    transform: translateY(-1px);
 }
 
-/* --- LOGIN PAGE SPECIFIC STYLES --- */
-
-/* Centering container for the login card */
-.login-section {
+/* --- Centering Fix for Login & Register --- */
+.login-section, .signup-section {
     display: flex;
     justify-content: center;
     align-items: center;
     padding: 60px 20px;
-    min-height: calc(100vh - 150px);
+    /* Centers the card vertically below the nav */
+    min-height: calc(100vh - 150px); 
 }
 
-/* The Login Card */
+/* Glassmorphism Form Card */
 form {
     background: rgba(255, 255, 255, 0.6);
     backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
-    padding: 50px 40px;
+    padding: 40px;
     border-radius: 32px;
     width: 100%;
-    max-width: 380px;
+    max-width: 420px;
     border: 1px solid rgba(255, 255, 255, 0.7);
     box-shadow: 0 20px 60px rgba(0,0,0,0.05);
-    text-align: center;
 }
 
 form h1 {
     font-size: 2.2rem;
     font-weight: 800;
-    margin-bottom: 35px;
+    margin-bottom: 30px;
+    text-align: center;
     letter-spacing: -1.5px;
     color: #2d3436;
 }
 
-/* Labels and Inputs */
+/* Django Form/Paragraph Styling */
+form p {
+    margin-bottom: 18px;
+    text-align: left;
+}
+
 form label {
     display: block;
-    text-align: left;
-    margin-bottom: 8px;
     font-weight: 600;
     font-size: 0.85rem;
     color: #636e72;
-    padding-left: 5px;
+    margin-bottom: 8px;
     text-transform: uppercase;
-    letter-spacing: 0.5px;
 }
 
 form input[type="text"], 
-form input[type="password"] {
+form input[type="password"],
+form input[type="email"],
+form select {
     width: 100%;
-    padding: 14px 20px;
-    margin-bottom: 25px;
-    border: 1px solid rgba(0,0,0,0.08);
-    border-radius: 16px;
-    background: rgba(255, 255, 255, 0.8);
+    padding: 14px;
+    border: 1px solid rgba(0,0,0,0.1);
+    border-radius: 14px;
+    background: rgba(255, 255, 255, 0.9);
     font-family: inherit;
     font-size: 1rem;
     box-sizing: border-box;
@@ -129,19 +155,17 @@ form input[type="password"] {
 form input:focus {
     outline: none;
     border-color: #0984e3;
-    background: white;
     box-shadow: 0 0 0 4px rgba(9, 132, 227, 0.1);
 }
 
-/* Login Button */
-form input[type="submit"], 
-form button {
+/* Form Submit Button */
+form button, form input[type="submit"] {
     width: 100%;
     padding: 16px;
     background: #0984e3;
     color: white;
     border: none;
-    border-radius: 18px;
+    border-radius: 16px;
     font-weight: 700;
     font-size: 1.1rem;
     cursor: pointer;
@@ -150,97 +174,64 @@ form button {
     margin-top: 10px;
 }
 
-form input[type="submit"]:hover {
+form button:hover {
     background: #0072c6;
     transform: translateY(-2px);
-    box-shadow: 0 15px 25px rgba(9, 132, 227, 0.3);
 }
 
-/* Links at bottom of card */
-.form-footer {
-    margin-top: 25px;
-    font-size: 0.9rem;
-    color: #636e72;
-}
-
-.form-footer a {
-    color: #0984e3;
-    text-decoration: none;
-    font-weight: 600;
-}
-
-.form-footer a:hover {
-    text-decoration: underline;
-}
-
-/* --- HOME PAGE SPECIFIC STYLES --- */
-
+/* --- Home Page Styling --- */
 .about {
     max-width: 850px;
-    margin: 100px auto 40px;
+    margin: 80px auto 40px;
     text-align: center;
     padding: 0 20px;
 }
 
 .about h1 {
-    font-size: 3.8rem;
+    font-size: 3.5rem;
     font-weight: 800;
-    color: #2d3436;
-    margin-bottom: 20px;
-    letter-spacing: -2.5px;
-    line-height: 1.1;
-}
-
-.about p {
-    font-size: 1.25rem;
-    color: #535c68;
-    max-width: 650px;
-    margin: 0 auto;
+    letter-spacing: -2px;
 }
 
 .about-boxes {
     display: flex;
     gap: 30px;
     justify-content: center;
-    margin-top: 60px;
-    padding: 0 20px 100px;
+    margin-top: 40px;
+    padding-bottom: 80px;
 }
 
 .about-box {
-    background: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.7);
     backdrop-filter: blur(10px);
     padding: 40px;
-    border-radius: 30px;
+    border-radius: 28px;
     flex: 1;
-    max-width: 380px;
-    border: 1px solid rgba(255, 255, 255, 0.7);
-    box-shadow: 0 20px 50px rgba(0,0,0,0.04);
-    transition: all 0.5s cubic-bezier(0.19, 1, 0.22, 1);
+    max-width: 360px;
+    border: 1px solid white;
     display: flex;
     flex-direction: column;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.03);
+    transition: transform 0.3s ease;
 }
 
 .about-box:hover {
-    transform: translateY(-15px) scale(1.02);
-    background: rgba(255, 255, 255, 0.8);
-    box-shadow: 0 30px 70px rgba(0,0,0,0.08);
+    transform: translateY(-10px);
 }
 
+/* Blue Action Buttons for Home Cards */
 .about-box a {
     display: inline-block;
-    padding: 16px 28px;
+    padding: 14px 24px;
     background: #0984e3;
-    color: white;
+    color: white !important;
     text-decoration: none;
-    border-radius: 16px;
+    border-radius: 14px;
     font-weight: 600;
-    text-align: center;
-    transition: all 0.3s ease;
+    margin-top: auto;
+    transition: background 0.3s;
 }
 
-/* Responsive design */
-@media (max-width: 850px) {
-    .about h1 { font-size: 2.8rem; }
-    .about-boxes { flex-direction: column; align-items: center; }
-    nav { padding: 1rem 5%; }
+.about-box a:hover {
+    background: #0072c6;
 }
