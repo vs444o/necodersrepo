@@ -7,6 +7,13 @@
     <form method="post" class="app-form auth-form">
         {% csrf_token %}
         <h1>Log in</h1>
+
+        {% if form.errors %}
+            <div class="form-errors" role="alert">
+                Wrong email/username or password. Please try again.
+            </div>
+        {% endif %}
+
         {{ form.as_p }}
         <input type="submit" value="Log in" class="btn btn--primary btn--block">
 

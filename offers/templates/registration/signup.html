@@ -26,6 +26,14 @@
 
         <ul id="address-suggestions" class="address-suggestions"></ul>
         <p id="address-source-note" class="help-text"></p>
+
+        {% if form.errors %}
+            <div class="form-errors" role="alert">
+                Please fix the highlighted fields below.
+            </div>
+        {% endif %}
+
+        {{ form.as_p }}
         <button type="submit" class="btn btn--primary btn--block">Create account</button>
 
         <p class="form-footer">
