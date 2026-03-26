@@ -1,127 +1,156 @@
+
 /* General Reset & Body */
 body {
     margin: 0;
     padding: 0;
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    font-family: 'Inter', 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
     line-height: 1.6;
-    color: #333;
-    /* Soft gradient background for a modern feel */
-    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    color: #2d3436;
+    /* Soft, premium radial gradient */
+    background: radial-gradient(circle at top right, #ffffff 0%, #dfe6e9 100%);
     min-height: 100vh;
 }
 
-/* Navigation Bar */
+/* Navigation Bar - Modern & Sticky */
 nav {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 1rem 5%;
-    background-color: white;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    padding: 1.2rem 8%;
+    background-color: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(10px); /* Frosted glass effect */
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
 }
 
 nav .div-center a {
     font-size: 1.5rem;
-    font-weight: bold;
+    font-weight: 800;
     color: #2d3436;
     text-decoration: none;
+    letter-spacing: -1px;
 }
 
+/* Nav links container */
+nav .div-right {
+    display: flex;
+    align-items: center;
+    gap: 25px;
+}
+
+/* Nav Links - Resetting all to look like normal text */
 nav .div-right a {
-    margin-left: 20px;
     text-decoration: none;
     color: #636e72;
     font-weight: 500;
-    transition: color 0.3s ease;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+    
+    /* Extreme reset to kill default button styling */
+    background: transparent !important;
+    border: none !important;
+    padding: 0 !important;
+    margin: 0;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    outline: none;
 }
 
 nav .div-right a:hover {
     color: #0984e3;
+    transform: translateY(-1px);
 }
 
-/* Hero Section / About */
+/* Hero Section */
 .about {
-    max-width: 900px;
-    margin: 60px auto;
+    max-width: 800px;
+    margin: 80px auto 40px;
     text-align: center;
     padding: 0 20px;
 }
 
 .about h1 {
-    font-size: 2.5rem;
+    font-size: 3.5rem;
+    font-weight: 800;
     color: #2d3436;
     margin-bottom: 20px;
+    letter-spacing: -2px;
 }
 
 .about p {
-    font-size: 1.1rem;
-    color: #535c68;
-    max-width: 700px;
-    margin: 10px auto;
+    font-size: 1.15rem;
+    color: #636e72;
+    max-width: 600px;
+    margin: 0 auto;
 }
 
-/* Container for the Boxes */
+/* Cards Container */
 .about-boxes {
     display: flex;
     gap: 30px;
     justify-content: center;
     margin-top: 50px;
+    padding-bottom: 80px;
 }
 
-/* Individual Cards */
+/* Individual Content Cards */
 .about-box {
-    background: rgba(255, 255, 255, 0.9);
-    padding: 30px;
-    border-radius: 15px;
+    background: #ffffff;
+    padding: 40px;
+    border-radius: 24px;
     flex: 1;
-    max-width: 350px;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.08);
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    max-width: 360px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     display: flex;
     flex-direction: column;
-    justify-content: space-between;
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .about-box:hover {
-    transform: translateY(-5px);
-    box-shadow: 0 15px 30px rgba(0,0,0,0.12);
+    transform: translateY(-12px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
 
 .about-box h3 {
+    font-size: 1.4rem;
     color: #2d3436;
-    margin-top: 0;
+    margin-bottom: 15px;
+    font-weight: 700;
 }
 
 .about-box p {
-    font-size: 0.95rem;
-    margin-bottom: 25px;
+    font-size: 1rem;
+    color: #636e72;
+    margin-bottom: 30px;
 }
 
-/* Buttons inside cards */
+/* Main Action Buttons (inside boxes) */
 .about-box a {
     display: inline-block;
-    padding: 12px 24px;
+    padding: 14px 24px;
     background-color: #0984e3;
     color: white;
     text-decoration: none;
-    border-radius: 8px;
+    border-radius: 12px;
     font-weight: 600;
-    transition: background 0.3s ease;
+    text-align: center;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(9, 132, 227, 0.3);
 }
 
 .about-box a:hover {
     background-color: #074b83;
+    box-shadow: 0 6px 20px rgba(9, 132, 227, 0.4);
 }
 
-/* Responsive design for mobile */
+/* Responsive design */
 @media (max-width: 768px) {
-    .about-boxes {
-        flex-direction: column;
-        align-items: center;
-    }
-    
-    nav {
-        flex-direction: column;
-        gap: 15px;
-    }
+    .about h1 { font-size: 2.5rem; }
+    .about-boxes { flex-direction: column; align-items: center; }
+    nav { flex-direction: column; gap: 15px; padding: 1.5rem; }
+    nav .div-right { gap: 15px; }
 }
