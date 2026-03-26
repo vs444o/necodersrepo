@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Post a Need</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <nav>
+    <a href="/">HelpNow</a>
+    <a href="/post/">+ Post a Need</a>
+  </nav>
+
+  <h1>Post a Need</h1>
+
+  <form method="POST">
+    {% csrf_token %}
+
+    <label>Your name</label>
+    <input type="text" name="name" required>
+
+    <label>What do you need?</label>
+    <input type="text" name="title" required>
+
+    <label>More details</label>
+    <textarea name="description" rows="3" required></textarea>
+
+    <label>Category</label>
+    <select name="category">
+      {% for val, label in categories %}
+        <option value="{{ val }}">{{ label }}</option>
+      {% endfor %}
+    </select>
+
+    <label>Paid or Volunteer?</label>
+    <select name="offer_type">
+      <option value="paid">Paid</option>
+      <option value="volunteer">Volunteer</option>
+    </select>
+
+    <label>Price (leave empty if volunteer)</label>
+    <input type="number" name="price" step="0.01">
+
+    <label>Location</label>
+    <input type="text" name="location" required>
+
+    <button type="submit">Post</button>
+  </form>
+
+</body>
+</html>

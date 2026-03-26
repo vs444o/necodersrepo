@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>HelpNow</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+  <nav>
+    <a href="/">HelpNow</a>
+    <a href="/post/">+ Post a Need</a>
+  </nav>
+
+  <h1>People who need help</h1>
+
+  {% for offer in offers %}
+  <div class="card">
+    <h3>{{ offer.title }}</h3>
+    <p>{{ offer.description }}</p>
+    <p>📍 {{ offer.location }} — {{ offer.get_category_display }}</p>
+    <p>{{ offer.offer_type }} {% if offer.price %}— €{{ offer.price }}{% endif %}</p>
+    <small>Posted by {{ offer.name }}</small>
+  </div>
+  {% empty %}
+  <p>No posts yet.</p>
+  {% endfor %}
+
+</body>
+</html>
