@@ -1,67 +1,138 @@
 {% extends "base.html" %}
-
-{% block title %}Find Requests - HelpNow{% endblock %}
+{% block title %}Find Help Requests - HelpNow{% endblock %}
 
 {% block content %}
-<section class="container page-header">
-    <h1>People who need help</h1>
-    <p>Review open requests and support someone nearby.</p>
-</section>
+<section class="container">
+    <h1>People Needing Help Near You</h1>
 
-<section class="container card-list">
-    {% for offer in offers %}
-        <article class="card">
-            <div class="card-head">
-                <h2>{{ offer.title }}</h2>
-                <span class="chip chip--{{ offer.status }}">{{ offer.get_status_display }}</span>
-            </div>
+    <div id="map" style="height: 400px; width: 100%; border-radius: 12px; margin-bottom: 20px; border: 2px solid #ddd;"></div>
 
-            <p class="card-description">{{ offer.description }}</p>
-
-            <dl class="meta-grid">
-                <div>
-                    <dt>Location</dt>
-                    <dd>
-                        {{ offer.location }}
-                        {% if offer.distance_km is not None %}
-                            ({{ offer.distance_km }} km away)
-                        {% endif %}
-                    </dd>
-                </div>
-                <div>
-                    <dt>Category</dt>
-                    <dd>{{ offer.get_category_display }}</dd>
-                </div>
-                <div>
-                    <dt>Type</dt>
-                    <dd>{{ offer.offer_type|title }}</dd>
-                </div>
-                <div>
-                    <dt>Price</dt>
-                    <dd>{% if offer.price %}EUR {{ offer.price }}{% else %}Volunteer{% endif %}</dd>
-                </div>
-            </dl>
-
-            <p class="meta-note">Posted by {{ offer.created_by.username|default:offer.name }}</p>
-
-            {% if user.is_authenticated and user.user_type == 'worker' and offer.status == 'waiting' %}
-                <form method="post" action="{% url 'accept_offer' offer.id %}" class="inline-action-form">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn--primary btn--block">Candidate</button>
-                </form>
-            {% endif %}
-
-            {% if user.is_authenticated and offer.status == 'accepted' and offer.accepted_by == user %}
-                <form method="post" action="{% url 'complete_offer' offer.id %}" class="inline-action-form">
-                    {% csrf_token %}
-                    <button type="submit" class="btn btn--secondary btn--block">Mark as done</button>
-                </form>
-            {% endif %}
-        </article>
-    {% empty %}
-        <div class="empty-state">
-            <p>No requests yet.</p>
+    <div class="offers-list">
+        {% for offer in offers %}
+        <div class="offer-card" 
+             data-lat="{{ offer.latitude }}" 
+             data-lng="{{ offer.longitude }}" 
+             data-title="{{ offer.title }}">
+            <h3>{{ offer.title }}</h3>
+            <p>{{ offer.description }}</p>
+            <p><strong>Category:</strong> {{ offer.get_category_display }}</p>
+            <p><strong>Address:</strong> {{ offer.address }}</p>
+            
+            <p class="distance-label" style="color: #27ae60; font-weight: bold;">
+                Calculating distance...
+            </p>
+            
+            <a href="#" class="btn btn--secondary">View Details</a>
         </div>
-    {% endfor %}
+        {% empty %}
+        <p>No help requests found in your area.</p>
+        {% endfor %}
+    </div>
 </section>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    // Initialize the map centered on Bulgaria by default
+    const map = L.map('map').setView([42.6977, 23.3219], 12);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    const offerCards = document.querySelectorAll('.offer-card');
+    const helpMarkers = L.layerGroup().addTo(map);
+    let workerMarker = null;
+
+    function getDistance(lat1, lon1, lat2, lon2) {
+        const R = 6371; // km
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return (R * c).toFixed(2);
+    }
+
+    offerCards.forEach(card => {
+        const lat = parseFloat(card.dataset.lat);
+        const lng = parseFloat(card.dataset.lng);
+        const title = card.dataset.title;
+
+        if (lat && lng) {
+            L.marker([lat, lng])
+                .addTo(helpMarkers)
+                .bindPopup(`<b>Help Needed:</b><br>${title}`);
+        }
+    });
+
+    if ("geolocation" in navigator) {
+        navigator.geolocation.watchPosition((position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+
+            if (workerMarker) {
+                workerMarker.setLatLng([lat, lng]);
+            } else {
+                workerMarker = L.circleMarker([lat, lng], {
+                    color: '#3498db',
+                    fillColor: '#3498db',
+                    fillOpacity: 0.8,
+                    radius: 10
+                }).addTo(map).bindPopup("<b>You are here</b>").openPopup();
+                
+                map.setView([lat, lng], 14);
+            }
+
+            offerCards.forEach(card => {
+                const oLat = parseFloat(card.dataset.lat);
+                const oLng = parseFloat(card.dataset.lng);
+                const distLabel = card.querySelector('.distance-label');
+
+                if (oLat && oLng) {
+                    const d = getDistance(lat, lng, oLat, oLng);
+                    distLabel.textContent = `📍 ${d} km away from you`;
+                }
+            });
+
+        }, (error) => {
+            console.error("Error getting location: ", error);
+        }, {
+            enableHighAccuracy: true
+        });
+    }
+});
+</script>
+
+<style>
+    .address-suggestions {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        border: 1px solid #ccc;
+        max-height: 200px;
+        overflow-y: auto;
+        background: white;
+        position: absolute;
+        width: 100%;
+        z-index: 1000;
+    }
+    .address-suggestion-item {
+        padding: 10px;
+        cursor: pointer;
+        border-bottom: 1px solid #eee;
+    }
+    .address-suggestion-item:hover {
+        background-color: #f0f0f0;
+    }
+    .offer-card {
+        border: 1px solid #eee;
+        padding: 15px;
+        margin-bottom: 15px;
+        border-radius: 8px;
+        background: #fdfdfd;
+    }
+</style>
 {% endblock %}
