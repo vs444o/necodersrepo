@@ -67,6 +67,11 @@ TEMPLATES = [
     },
 ]
 
+AUTH_USER_MODEL = 'offers.User'
+
+LOGIN_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = 'home'
+
 WSGI_APPLICATION = 'myproject.wsgi.application'
 
 

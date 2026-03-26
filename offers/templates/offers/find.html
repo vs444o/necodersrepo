@@ -15,8 +15,8 @@
       <a href="/">Home</a>
       <a href="/find/">Find a Need</a>
       <a href="/post/">Post a Need</a>
-      <a href="/login/">Log in</a>
-      <a href="/register/">Sign up</a>
+      <a href="{% url 'login' %}">Log in</a>
+      <a href="{% url 'signup' %}">Sign up</a>
     </div>
   </nav>
 
@@ -28,7 +28,22 @@
     <p>{{ offer.description }}</p>
     <p>{{ offer.location }} — {{ offer.get_category_display }}</p>
     <p>{{ offer.offer_type }} {% if offer.price %}— €{{ offer.price }}{% endif %}</p>
-    <small>Posted by {{ offer.name }}</small>
+    <p><strong>Status:</strong> {{ offer.get_status_display }}</p>
+    <small>Posted by {{ offer.created_by.username|default:offer.name }}</small>
+
+    {% if user.is_authenticated and user.user_type == 'worker' and offer.status == 'waiting' %}
+      <form method="post" action="{% url 'accept_offer' offer.id %}">
+        {% csrf_token %}
+        <button type="submit">Accept</button>
+      </form>
+    {% endif %}
+
+    {% if user.is_authenticated and offer.status == 'accepted' and offer.accepted_by == user %}
+      <form method="post" action="{% url 'complete_offer' offer.id %}">
+        {% csrf_token %}
+        <button type="submit">Mark Done</button>
+      </form>
+    {% endif %}
   </div>
   {% empty %}
   <p>No posts yet.</p>

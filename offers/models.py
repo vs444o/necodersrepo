@@ -1,4 +1,5 @@
 from django.db import models
+from django.contrib.auth.models import AbstractUser
 
 class Offer(models.Model):
     CATEGORY_CHOICES = [
@@ -16,15 +17,75 @@ class Offer(models.Model):
         ('volunteer', 'Volunteer'),
     ]
 
-    name = models.CharField(max_length=100)        # who's posting
+    # MVP: keep the original "name" field for compatibility with existing form,
+    # but we also store the real Django user in `created_by`.
+    name = models.CharField(max_length=100)        # display name (legacy)
+    created_by = models.ForeignKey(
+        'User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='offers_created',
+    )
     title = models.CharField(max_length=200)        # headline
     description = models.TextField()               # details
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
     offer_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
     price = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
+
+    # Plan calls this "address".
     location = models.CharField(max_length=200)
+
+    STATUS_CHOICES = [
+        ('waiting', 'Waiting'),
+        ('accepted', 'Accepted'),
+        ('completed', 'Done'),
+    ]
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default='waiting',
+        db_index=True,
+    )
+    accepted_by = models.ForeignKey(
+        'User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='offers_accepted',
+    )
+    accepted_at = models.DateTimeField(null=True, blank=True)
+    completed_by = models.ForeignKey(
+        'User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='offers_completed',
+    )
+    completed_at = models.DateTimeField(null=True, blank=True)
+
+    # Optional: if a relative submits the request "on behalf" of someone.
+    requested_for = models.ForeignKey(
+        'User',
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name='offers_requested_for',
+    )
+
     created_at = models.DateTimeField(auto_now_add=True)
     contact_info = models.CharField(max_length=200, blank=True)  # optional contact info
 
     def __str__(self):
-        return self.title
+        return f"{self.title} ({self.get_status_display()})"
+
+
+class User(AbstractUser):
+    USER_TYPES = (
+        ('worker', 'Volunteer / Worker'),
+        ('needer', 'Help Needer'),
+    )
+    user_type = models.CharField(max_length=10, choices=USER_TYPES, default='needer')
+
+    def __str__(self):
+        return self.username    
