@@ -15,12 +15,17 @@
       <a href="/">Home</a>
       <a href="/find/">Find a Need</a>
       <a href="/post/">Post a Need</a>
-      <a href="{% url 'login' %}"><button>Login</button></a>
-      <a href="{% url 'signup' %}"><button>Register Now</button></a>
-      <form action="{% url 'logout' %}" method="post">
-        {% csrf_token %}
-        <button type="submit">Logout</button>
-      </form>
+
+      {% if user.is_authenticated %}
+  <span>{{ user.username }} — {% if user.user_type == 'worker' %}Volunteer/Worker{% else %}Help Needer{% endif %}</span>
+  <form action="{% url 'logout' %}" method="post" style="display:inline">
+    {% csrf_token %}
+    <button type="submit">Logout</button>
+  </form>
+{% else %}
+        <a href="{% url 'login' %}"><button>Login</button></a>
+        <a href="{% url 'signup' %}"><button>Register Now</button></a>
+      {% endif %}
     </div>
   </nav>
 
