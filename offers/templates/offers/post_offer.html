@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Post a Need - HelpNow</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'style.css' %}">
+</head>
+<body>
+
+  <nav>
+    <div class="div-center">
+      <a href="/">Welcome to HelpNow</a>
+    </div>
+    <div class="div-right">
+      <a href="/">Home</a>
+      <a href="/find/">Find a Need</a>
+      <a href="/post/">Post a Need</a>
+      <a href="{% url 'login' %}"><button>Login</button></a>
+      <a href="{% url 'signup' %}"><button>Register Now</button></a>
+      <form action="{% url 'logout' %}" method="post">
+        {% csrf_token %}
+        <button type="submit">Logout</button>
+      </form>
+    </div>
+  </nav>
+
+  <h1>Post a Need</h1>
+
+  <form method="POST">
+    {% csrf_token %}
+
+    <label>What do you need?</label>
+    <input type="text" name="title" required>
+
+    <label>More details</label>
+    <textarea name="description" rows="3" required></textarea>
+
+    <label>Category</label>
+    <select name="category">
+      {% for val, label in categories %}
+        <option value="{{ val }}">{{ label }}</option>
+      {% endfor %}
+    </select>
+
+    <label>Paid or Volunteer?</label>
+    <select name="offer_type">
+      <option value="paid">Paid</option>
+      <option value="volunteer">Volunteer</option>
+    </select>
+
+    <label>Price (leave empty if volunteer)</label>
+    <input type="number" name="price" step="0.01">
+
+    <label>Location</label>
+    <input type="text" name="location" required>
+
+    <button type="submit">Post</button>
+  </form>
+
+</body>
+</html>
