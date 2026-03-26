@@ -17,7 +17,7 @@
       <a href="/post/">Post a Need</a>
 
       {% if user.is_authenticated %}
-        <span>{{ user.username }}</span>
+        <span>{{ user.username }} — {% if user.user_type == 'worker' %}Volunteer/Worker{% else %}Help Needer{% endif %}</span>
         <form action="{% url 'logout' %}" method="post" style="display:inline">
           {% csrf_token %}
           <button type="submit">Logout</button>
@@ -47,13 +47,12 @@
       </form>
     {% endif %}
 
-    {% if user.is_authenticated %}
-  <span>{{ user.username }} — {% if user.user_type == 'worker' %}Volunteer/Worker{% else %}Help Needer{% endif %}</span>
-  <form action="{% url 'logout' %}" method="post" style="display:inline">
-    {% csrf_token %}
-    <button type="submit">Logout</button>
-  </form>
-{% else %}
+    {% if user.is_authenticated and offer.status == 'accepted' and offer.accepted_by == user %}
+      <form method="post" action="{% url 'complete_offer' offer.id %}">
+        {% csrf_token %}
+        <button type="submit">Mark Done</button>
+      </form>
+    {% endif %}
   </div>
   {% empty %}
   <p>No posts yet.</p>
