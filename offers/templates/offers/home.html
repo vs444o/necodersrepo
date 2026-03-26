@@ -1,55 +1,40 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>HelpNow</title>
-  {% load static %}
-<link rel="stylesheet" href="{% static 'style.css' %}">
-</head>
-<body>
+{% extends "base.html" %}
 
-  <nav>
-    <div class="div-center">
-      <a href="/">Welcome to HelpNow</a>
+{% block title %}HelpNow{% endblock %}
+
+{% block content %}
+<section class="hero container">
+    <h1>Daily support for people who need a hand.</h1>
+    <p class="hero-subtitle">
+        HelpNow connects older adults and families with nearby helpers for shopping,
+        cleaning, home tasks, and companionship.
+    </p>
+
+    <div class="hero-actions">
+        {% if user.is_authenticated and user.user_type == "worker" %}
+            <a class="btn btn--primary btn--lg" href="{% url 'find' %}">Find requests</a>
+            <a class="btn btn--secondary btn--lg" href="#how-it-works">How it works</a>
+        {% elif user.is_authenticated and user.user_type == "needer" %}
+            <a class="btn btn--primary btn--lg" href="{% url 'post_offer' %}">Post a request</a>
+            <a class="btn btn--secondary btn--lg" href="{% url 'find' %}">See active requests</a>
+        {% else %}
+            <a class="btn btn--primary btn--lg" href="{% url 'signup' %}">Get started</a>
+            <a class="btn btn--secondary btn--lg" href="{% url 'login' %}">Log in</a>
+        {% endif %}
     </div>
-    <div class="div-right">
-      <a href="/">Home</a>
-      {% if user.user_type == "worker" %}
-        <a href="/find/">Find a Need</a>
-      {% elif user.user_type == "needer" %}
-        <a href="/post/">Post a Need</a>
-      {% endif %}
-      {% if user.is_authenticated %}
-      <span>{{ user.username }} — {% if user.user_type == 'worker' %}Volunteer/Worker{% else %}Help Needer{% endif %}</span>
-      <form action="{% url 'logout' %}" method="post" style="display:inline">
-        {% csrf_token %}
-        <button type="submit">Logout</button>
-      </form>
-    {% else %}
-        <a href="{% url 'login' %}"><button>Login</button></a>
-        <a href="{% url 'signup' %}"><button>Register Now</button></a>
-      {% endif %}
-    </div>
-  </nav>
+</section>
 
-  <div class="about">
-    <h1>What is HelpNow?</h1>
-    <p>HelpNow is a platform that connects people who need help with people who can provide it.</p>
-    <p>Maybe your grandmother needs her house cleaned. Maybe someone needs groceries carried. Maybe someone just needs a hand and can't afford to pay — that's what the volunteer option is for.</p>
-    <p>Anyone can post a need. Anyone can step up and help.</p>
+<section id="how-it-works" class="container info-grid">
+    <article class="panel">
+        <h2>For people asking for help</h2>
+        <p>Submit a simple request with location, type of help, and details.</p>
+        <p>Track status from waiting to accepted and completed.</p>
+    </article>
 
-    <div class="about-boxes">
-      <div class="about-box">
-        <h3>Post a Need</h3>
-        <p>Describe what you need, where you are, and whether you can pay or need a volunteer.</p>
-        <a href="/post/">Post now</a>
-      </div>
-      <div class="about-box">
-        <h3>Find a Need</h3>
-        <p>Browse posted needs in your area and reach out to help someone today.</p>
-        <a href="/find/">Browse needs</a>
-      </div>
-    </div>
-  </div>
-
-</body>
-</html>
+    <article class="panel">
+        <h2>For helpers and volunteers</h2>
+        <p>Browse requests in one place and accept the ones you can support.</p>
+        <p>Mark completed tasks when done to keep everything clear.</p>
+    </article>
+</section>
+{% endblock %}

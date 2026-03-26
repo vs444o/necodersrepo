@@ -1,64 +1,62 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Find a Need - HelpNow</title>
-  {% load static %}
-  <link rel="stylesheet" href="{% static 'style.css' %}">
-</head>
-<body>
+{% extends "base.html" %}
 
-  <nav>
-    <div class="div-center">
-      <a href="/">Welcome to HelpNow</a>
-    </div>
-    <div class="div-right">
-      <a href="/">Home</a>
-      {% if user.user_type == "worker" %}
-        <a href="/find/">Find a Need</a>
-      {% elif user.user_type == "needer" %}
-        <a href="/post/">Post a Need</a>
-      {% endif %}
-      {% if user.is_authenticated %}
-        <span>{{ user.username }} — {% if user.user_type == 'worker' %}Volunteer/Worker{% else %}Help Needer{% endif %}</span>
-        <form action="{% url 'logout' %}" method="post" style="display:inline">
-          {% csrf_token %}
-          <button type="submit">Logout</button>
-        </form>
-      {% else %}
-        <a href="{% url 'login' %}">Log in</a>
-        <a href="{% url 'signup' %}">Sign up</a>
-      {% endif %}
-    </div>
-  </nav>
+{% block title %}Find Requests - HelpNow{% endblock %}
 
-  <h1>People who need help</h1>
+{% block content %}
+<section class="container page-header">
+    <h1>People who need help</h1>
+    <p>Review open requests and support someone nearby.</p>
+</section>
 
-  {% for offer in offers %}
-  <div class="card">
-    <h3>{{ offer.title }}</h3>
-    <p>{{ offer.description }}</p>
-    <p>{{ offer.location }} — {{ offer.get_category_display }}</p>
-    <p>{{ offer.offer_type }} {% if offer.price %}— €{{ offer.price }}{% endif %}</p>
-    <p><strong>Status:</strong> {{ offer.get_status_display }}</p>
-    <small>Posted by {{ offer.created_by.username|default:offer.name }}</small>
+<section class="container card-list">
+    {% for offer in offers %}
+        <article class="card">
+            <div class="card-head">
+                <h2>{{ offer.title }}</h2>
+                <span class="chip chip--{{ offer.status }}">{{ offer.get_status_display }}</span>
+            </div>
 
-    {% if user.is_authenticated and user.user_type == 'worker' and offer.status == 'waiting' %}
-      <form method="post" action="{% url 'accept_offer' offer.id %}">
-        {% csrf_token %}
-        <button type="submit">Accept</button>
-      </form>
-    {% endif %}
+            <p class="card-description">{{ offer.description }}</p>
 
-    {% if user.is_authenticated and offer.status == 'accepted' and offer.accepted_by == user %}
-      <form method="post" action="{% url 'complete_offer' offer.id %}">
-        {% csrf_token %}
-        <button type="submit">Mark Done</button>
-      </form>
-    {% endif %}
-  </div>
-  {% empty %}
-  <p>No posts yet.</p>
-  {% endfor %}
+            <dl class="meta-grid">
+                <div>
+                    <dt>Location</dt>
+                    <dd>{{ offer.location }}</dd>
+                </div>
+                <div>
+                    <dt>Category</dt>
+                    <dd>{{ offer.get_category_display }}</dd>
+                </div>
+                <div>
+                    <dt>Type</dt>
+                    <dd>{{ offer.offer_type|title }}</dd>
+                </div>
+                <div>
+                    <dt>Price</dt>
+                    <dd>{% if offer.price %}EUR {{ offer.price }}{% else %}Volunteer{% endif %}</dd>
+                </div>
+            </dl>
 
-</body>
-</html>
+            <p class="meta-note">Posted by {{ offer.created_by.username|default:offer.name }}</p>
+
+            {% if user.is_authenticated and user.user_type == 'worker' and offer.status == 'waiting' %}
+                <form method="post" action="{% url 'accept_offer' offer.id %}" class="inline-action-form">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn--primary btn--block">Candidate</button>
+                </form>
+            {% endif %}
+
+            {% if user.is_authenticated and offer.status == 'accepted' and offer.accepted_by == user %}
+                <form method="post" action="{% url 'complete_offer' offer.id %}" class="inline-action-form">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn--secondary btn--block">Mark as done</button>
+                </form>
+            {% endif %}
+        </article>
+    {% empty %}
+        <div class="empty-state">
+            <p>No requests yet.</p>
+        </div>
+    {% endfor %}
+</section>
+{% endblock %}

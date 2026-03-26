@@ -1,69 +1,56 @@
-<!DOCTYPE html>
-<html>
-<head>
-  <title>Post a Need - HelpNow</title>
-  {% load static %}
-  <link rel="stylesheet" href="{% static 'style.css' %}">
-</head>
-<body>
+{% extends "base.html" %}
 
-  <nav>
-    <div class="div-center">
-      <a href="/">Welcome to HelpNow</a>
-    </div>
-    <div class="div-right">
-      <a href="/">Home</a>
-      {% if user.user_type == "worker" %}
-        <a href="/find/">Find a Need</a>
-      {% elif user.user_type == "needer" %}
-        <a href="/post/">Post a Need</a>
-      {% endif %}
+{% block title %}Post a Request - HelpNow{% endblock %}
 
-      {% if user.is_authenticated %}
-  <span>{{ user.username }} — {% if user.user_type == 'worker' %}Volunteer/Worker{% else %}Help Needer{% endif %}</span>
-  <form action="{% url 'logout' %}" method="post" style="display:inline">
-    {% csrf_token %}
-    <button type="submit">Logout</button>
-  </form>
-{% else %}
-        <a href="{% url 'login' %}"><button>Login</button></a>
-        <a href="{% url 'signup' %}"><button>Register Now</button></a>
-      {% endif %}
-    </div>
-  </nav>
+{% block content %}
+<section class="container page-header">
+    <h1>Post a request</h1>
+    <p>Fill in the details clearly so helpers can respond quickly.</p>
+</section>
 
-  <h1>Post a Need</h1>
+<section class="container form-shell">
+    <form method="post" class="app-form">
+        {% csrf_token %}
 
-  <form method="POST">
-    {% csrf_token %}
+        <div class="form-group">
+            <label for="title">What do you need?</label>
+            <input id="title" type="text" name="title" required>
+        </div>
 
-    <label>What do you need?</label>
-    <input type="text" name="title" required>
+        <div class="form-group">
+            <label for="description">More details</label>
+            <textarea id="description" name="description" rows="4" required></textarea>
+        </div>
 
-    <label>More details</label>
-    <textarea name="description" rows="3" required></textarea>
+        <div class="form-group">
+            <label for="category">Category</label>
+            <select id="category" name="category">
+                {% for val, label in categories %}
+                    <option value="{{ val }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+        </div>
 
-    <label>Category</label>
-    <select name="category">
-      {% for val, label in categories %}
-        <option value="{{ val }}">{{ label }}</option>
-      {% endfor %}
-    </select>
+        <div class="form-group">
+            <label for="offer_type">Paid or volunteer?</label>
+            <select id="offer_type" name="offer_type">
+                <option value="paid">Paid</option>
+                <option value="volunteer">Volunteer</option>
+            </select>
+        </div>
 
-    <label>Paid or Volunteer?</label>
-    <select name="offer_type">
-      <option value="paid">Paid</option>
-      <option value="volunteer">Volunteer</option>
-    </select>
+        <div class="form-group">
+            <label for="price">Price (leave empty for volunteer)</label>
+            <input id="price" type="number" name="price" step="0.01">
+            <p class="help-text">Use this only when offer type is paid.</p>
+        </div>
 
-    <label>Price (leave empty if volunteer)</label>
-    <input type="number" name="price" step="0.01">
+        <div class="form-group">
+            <label for="location">Location</label>
+            <input id="location" type="text" name="location" required>
+        </div>
 
-    <label>Location</label>
-    <input type="text" name="location" required>
-
-    <button type="submit">Post</button>
-  </form>
-
-</body>
-</html>
+        <button type="submit" class="btn btn--primary btn--block">Post request</button>
+    </form>
+</section>
+{% endblock %}

@@ -1,0 +1,25 @@
+<nav class="top-nav" aria-label="Main navigation">
+    <div class="container nav-wrap">
+        <a class="brand-link" href="{% url 'home' %}">HelpNow</a>
+        <div class="nav-actions">
+            <a class="nav-link" href="{% url 'home' %}">Home</a>
+
+            {% if user.is_authenticated %}
+                {% if user.user_type == "worker" %}
+                    <a class="nav-link" href="{% url 'find' %}">Find requests</a>
+                {% elif user.user_type == "needer" %}
+                    <a class="nav-link" href="{% url 'post_offer' %}">Post a request</a>
+                {% endif %}
+
+                <span class="user-pill">{{ user.username }} ({{ user.user_type|title }})</span>
+                <form action="{% url 'logout' %}" method="post" class="nav-logout-form">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn--secondary btn--sm">Logout</button>
+                </form>
+            {% else %}
+                <a class="btn btn--secondary btn--sm" href="{% url 'login' %}">Log in</a>
+                <a class="btn btn--primary btn--sm" href="{% url 'signup' %}">Sign up</a>
+            {% endif %}
+        </div>
+    </div>
+</nav>
