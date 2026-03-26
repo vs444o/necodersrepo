@@ -2,28 +2,43 @@
 <html>
 <head>
   <title>HelpNow</title>
-  <link rel="stylesheet" href="/static/style.css">
+  {% load static %}
+<link rel="stylesheet" href="{% static 'style.css' %}">
 </head>
 <body>
 
   <nav>
-    <a href="/">HelpNow</a>
-    <a href="/post/">+ Post a Need</a>
+    <div class="div-center">
+      <a href="/">Welcome to HelpNow</a>
+    </div>
+    <div class="div-right">
+      <a href="/">Home</a>
+      <a href="/find/">Find a Need</a>
+      <a href="/post/">Post a Need</a>
+      <a href="/login/">Log in</a>
+      <a href="/register/">Sign up</a>
+    </div>
   </nav>
 
-  <h1>People who need help</h1>
+  <div class="about">
+    <h1>What is HelpNow?</h1>
+    <p>HelpNow is a platform that connects people who need help with people who can provide it.</p>
+    <p>Maybe your grandmother needs her house cleaned. Maybe someone needs groceries carried. Maybe someone just needs a hand and can't afford to pay — that's what the volunteer option is for.</p>
+    <p>Anyone can post a need. Anyone can step up and help.</p>
 
-  {% for offer in offers %}
-  <div class="card">
-    <h3>{{ offer.title }}</h3>
-    <p>{{ offer.description }}</p>
-    <p>📍 {{ offer.location }} — {{ offer.get_category_display }}</p>
-    <p>{{ offer.offer_type }} {% if offer.price %}— €{{ offer.price }}{% endif %}</p>
-    <small>Posted by {{ offer.name }}</small>
+    <div class="about-boxes">
+      <div class="about-box">
+        <h3>Post a Need</h3>
+        <p>Describe what you need, where you are, and whether you can pay or need a volunteer.</p>
+        <a href="/post/">Post now</a>
+      </div>
+      <div class="about-box">
+        <h3>Find a Need</h3>
+        <p>Browse posted needs in your area and reach out to help someone today.</p>
+        <a href="/find/">Browse needs</a>
+      </div>
+    </div>
   </div>
-  {% empty %}
-  <p>No posts yet.</p>
-  {% endfor %}
 
 </body>
 </html>

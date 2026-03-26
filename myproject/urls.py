@@ -21,5 +21,6 @@ from offers import views
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', views.home, name='home'),
+    path('find/', views.find, name='find'),
     path('post/', views.post_offer, name='post_offer'),
 ]

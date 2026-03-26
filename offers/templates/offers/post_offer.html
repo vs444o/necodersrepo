@@ -1,14 +1,23 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Post a Need</title>
-  <link rel="stylesheet" href="/static/style.css">
+  <title>Post a Need - HelpNow</title>
+  {% load static %}
+  <link rel="stylesheet" href="{% static 'style.css' %}">
 </head>
 <body>
 
   <nav>
-    <a href="/">HelpNow</a>
-    <a href="/post/">+ Post a Need</a>
+    <div class="div-center">
+      <a href="/">Welcome to HelpNow</a>
+    </div>
+    <div class="div-right">
+      <a href="/">Home</a>
+      <a href="/find/">Find a Need</a>
+      <a href="/post/">Post a Need</a>
+      <a href="/login/">Log in</a>
+      <a href="/register/">Sign up</a>
+    </div>
   </nav>
 
   <h1>Post a Need</h1>

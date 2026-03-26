@@ -1,27 +1,63 @@
 body {
   font-family: sans-serif;
-  max-width: 700px;
+  max-width: 1450px;
   margin: 0 auto;
   padding: 1rem;
 }
 
 nav {
   display: flex;
-  gap: 1rem;
+  justify-content: flex-end;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  background: white;
+  padding: 1rem;
+  border-bottom: 1px solid #ccc;
   margin-bottom: 2rem;
+  z-index: 100;
 }
 
-nav a {
+.div-center {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-weight: bold;
+  font-size: 1.1rem;
+}
+
+.div-center a {
+  text-decoration: none;
+  color: black;
+}
+
+.div-right {
+  display: flex;
+  gap: 2rem;
+}
+
+.div-right a {
   text-decoration: none;
   color: black;
   font-weight: bold;
 }
 
+.div-right a:hover {
+  text-decoration: underline;
+}
+
 .card {
-  border: 1px solid #ccc;
-  border-radius: 8px;
-  padding: 1rem;
-  margin-bottom: 1rem;
+  border: 1px solid #e1e4e8;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+  background-color: #ffffff;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  max-width: 400px;
+}
+
+.card:hover {
+  box-shadow: 0 8px 15px rgba(0,0,0,0.1);
 }
 
 label {
@@ -44,4 +80,49 @@ button {
   padding: 0.7rem 2rem;
   font-size: 1rem;
   cursor: pointer;
+}
+
+.about {
+  max-width: 700px;
+  margin: 3rem auto;
+  padding: 0 1rem;
+}
+
+.about h1 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+}
+
+.about p {
+  color: #444;
+  line-height: 1.7;
+  margin-bottom: 0.8rem;
+}
+
+.about-boxes {
+  display: flex;
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.about-box {
+  flex: 1;
+  border: 1px solid #ccc;
+  border-radius: 10px;
+  padding: 1.2rem;
+}
+
+.about-box h3 {
+  margin-bottom: 0.5rem;
+}
+
+.about-box a {
+  display: inline-block;
+  margin-top: 1rem;
+  font-weight: bold;
+  text-decoration: none;
+  color: black;
+  border: 1px solid black;
+  padding: 0.4rem 1rem;
+  border-radius: 6px;
 }
