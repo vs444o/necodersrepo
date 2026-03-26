@@ -19,14 +19,14 @@
         <a href="/post/">Post a Need</a>
       {% endif %}
       {% if user.is_authenticated %}
-      <span>{{ user.username }} — {% if user.user_type == 'worker' %}Volunteer/Worker{% else %}Help Needer{% endif %}</span>
-      <form action="{% url 'logout' %}" method="post" style="display:inline">
-        {% csrf_token %}
-        <button type="submit">Logout</button>
-      </form>
-    {% else %}
-        <a href="{% url 'login' %}"><button>Login</button></a>
-        <a href="{% url 'signup' %}"><button>Register Now</button></a>
+        <span>{{ user.username }} — {% if user.user_type == 'worker' %}Volunteer/Worker{% else %}Help Needer{% endif %}</span>
+        <form action="{% url 'logout' %}" method="post" style="display:inline">
+          {% csrf_token %}
+          <button type="submit">Logout</button>
+        </form>
+      {% else %}
+        <a href="{% url 'login' %}">Log in</a>
+        <a href="{% url 'signup' %}">Sign up</a>
       {% endif %}
     </div>
   </nav>
@@ -49,8 +49,7 @@
       </form>
     {% endif %}
 
-
-{% if user.is_authenticated and offer.status == 'accepted' and offer.accepted_by == user %}
+    {% if user.is_authenticated and offer.status == 'accepted' and offer.accepted_by == user %}
       <form method="post" action="{% url 'complete_offer' offer.id %}">
         {% csrf_token %}
         <button type="submit">Mark Done</button>
