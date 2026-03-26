@@ -13,6 +13,7 @@ def home(request):
     return render(request, 'offers/home.html')
 
 
+@login_required
 def find(request):
     """List of all requests/needs."""
     offers = Offer.objects.all().order_by('-created_at')
@@ -24,7 +25,7 @@ def post_offer(request):
     """Create a new help request (MVP)."""
     if request.method == 'POST':
         offer = Offer.objects.create(
-            name=request.user.username,  # legacy display name
+            name=request.user.username,
             created_by=request.user,
             title=request.POST['title'],
             description=request.POST['description'],
@@ -85,7 +86,7 @@ def signup_view(request):
         form = ExtendedUserCreationForm(request.POST)
         if form.is_valid():
             user = form.save()
-            login(request, user)  # Log them in immediately
+            login(request, user)
             return redirect('home')
     else:
         form = ExtendedUserCreationForm()
