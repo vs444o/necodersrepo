@@ -37,14 +37,6 @@
         70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255, 71, 87, 0); }
         100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); }
     }
-    /* Your original address suggestions styling */
-    .address-suggestions {
-        list-style: none; padding: 0; margin: 0; border: 1px solid #ccc; 
-        background: #fff; position: absolute; width: 100%; z-index: 100;
-        border-radius: 0 0 8px 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    }
-    .address-suggestion-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 0.9rem; }
-    .address-suggestion-item:hover { background: #f1f3f5; }
 </style>
 
 <section class="container page-header">
@@ -106,6 +98,9 @@
             <input type="hidden" name="latitude" id="offer-latitude" value="{{ user.latitude }}">
             <input type="hidden" name="longitude" id="offer-longitude" value="{{ user.longitude }}">
             <small class="help-text">Start typing to search, or use your saved address.</small>
+            {% if error %}
+                <p class="help-text" style="color:#8f1d1d;font-weight:700;">{{ error }}</p>
+            {% endif %}
             <p id="location-note" class="help-text"></p>
         </div>
 
@@ -156,8 +151,7 @@ function runVoiceAI(targetId, event) {
 }
 
 /**
- * YOUR ORIGINAL ADDRESS & GEOLOCATION LOGIC
- * Handled via Nominatim (OpenStreetMap)
+ * Address selection (Google Places only)
  */
 (() => {
     const form = document.getElementById("post-offer-form");
@@ -165,77 +159,71 @@ function runVoiceAI(targetId, event) {
     const latInput = document.getElementById("offer-latitude");
     const lngInput = document.getElementById("offer-longitude");
     const note = document.getElementById("location-note");
-    let debounce = null;
-    let submitRetryDone = false;
+    const googleApiKey = "{{ google_maps_api_key|default:''|escapejs }}";
 
-    const list = document.createElement("ul");
-    list.className = "address-suggestions";
-    locationInput.parentNode.insertBefore(list, locationInput.nextSibling);
+    const activateGooglePlaces = () => {
+        note.textContent = "Using Google Maps suggestions.";
 
-    const clearSuggestions = () => { list.innerHTML = ""; };
+        const autocomplete = new google.maps.places.Autocomplete(locationInput, {
+            componentRestrictions: { country: "bg" },
+            fields: ["formatted_address", "geometry"],
+            types: ["address"],
+        });
 
-    locationInput.addEventListener("input", () => {
-        latInput.value = "";
-        lngInput.value = "";
-        note.textContent = "";
-        clearSuggestions();
-
-        const q = locationInput.value.trim();
-        if (q.length < 3) return;
-
-        clearTimeout(debounce);
-        debounce = setTimeout(async () => {
-            try {
-                const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(q)}&limit=5&countrycodes=bg`;
-                const res = await fetch(url, { headers: { Accept: "application/json" } });
-                const data = await res.json();
-
-                clearSuggestions();
-                data.forEach(item => {
-                    const li = document.createElement("li");
-                    li.textContent = item.display_name;
-                    li.className = "address-suggestion-item";
-                    li.addEventListener("click", () => {
-                        locationInput.value = item.display_name;
-                        latInput.value = item.lat;
-                        lngInput.value = item.lon;
-                        clearSuggestions();
-                        note.textContent = "Location verified.";
-                    });
-                    list.appendChild(li);
-                });
-            } catch (e) {}
-        }, 300);
-    });
-
-    document.addEventListener("click", (e) => {
-        if (!list.contains(e.target) && e.target !== locationInput) clearSuggestions();
-    });
-
-    form.addEventListener("submit", async (e) => {
-        if (submitRetryDone) return;
-        const hasAddress = locationInput.value.trim();
-        const hasCoords = latInput.value && lngInput.value;
-        if (!hasAddress || hasCoords) return;
-
-        e.preventDefault();
-        note.textContent = "Verifying location...";
-
-        try {
-            const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(hasAddress)}&limit=1&countrycodes=bg`;
-            const res = await fetch(url, { headers: { Accept: "application/json" } });
-            const data = await res.json();
-            if (data && data[0]) {
-                latInput.value = data[0].lat;
-                lngInput.value = data[0].lon;
-                note.textContent = "Location verified.";
-                submitRetryDone = true;
-                form.requestSubmit();
+        autocomplete.addListener("place_changed", () => {
+            const place = autocomplete.getPlace();
+            if (!place || !place.geometry || !place.geometry.location) {
+                latInput.value = "";
+                lngInput.value = "";
                 return;
             }
-        } catch (e) {}
-        note.textContent = "Please pick a Bulgarian address from the suggestions.";
-    });
+
+            locationInput.value = place.formatted_address || locationInput.value;
+            latInput.value = Number(place.geometry.location.lat()).toFixed(6);
+            lngInput.value = Number(place.geometry.location.lng()).toFixed(6);
+            note.textContent = "Location verified.";
+        });
+
+        locationInput.addEventListener("input", () => {
+            latInput.value = "";
+            lngInput.value = "";
+        });
+
+        form.addEventListener("submit", (e) => {
+            const hasAddress = locationInput.value.trim();
+            const hasCoords = latInput.value && lngInput.value;
+            if (!hasAddress) return;
+            if (!hasCoords) {
+                e.preventDefault();
+                note.textContent = "Pick an address from Google suggestions so we can save the exact location.";
+            }
+        });
+    };
+
+    if (googleApiKey) {
+        window.__initPostOfferGooglePlaces = () => {
+            try {
+                if (window.google && google.maps && google.maps.places) {
+                    activateGooglePlaces();
+                    return;
+                }
+            } catch (e) {
+                // ignore
+            }
+            note.textContent = "Google Maps failed to load. Fix your API key restrictions / billing / Places API.";
+        };
+
+        const script = document.createElement("script");
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleApiKey)}&libraries=places&callback=__initPostOfferGooglePlaces`;
+        script.async = true;
+        script.defer = true;
+        script.onerror = () => {
+            note.textContent = "Google Maps failed to load. Fix your API key restrictions / billing / Places API.";
+        };
+        document.head.appendChild(script);
+    } else {
+        note.textContent = "Missing Google Maps API key.";
+    }
 })();
 </script>
 {% endblock %}

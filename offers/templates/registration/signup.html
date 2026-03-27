@@ -77,90 +77,75 @@
     const latInput = document.getElementById("id_latitude");
     const lngInput = document.getElementById("id_longitude");
     const note = document.getElementById("location-note");
-    let debounce = null;
-    let submitRetryDone = false;
+    const googleApiKey = "{{ google_maps_api_key|default:''|escapejs }}";
+    let googleReady = false;
 
     if (!addressInput) return;
 
-    // Create suggestions list
-    const list = document.createElement("ul");
-    list.className = "address-suggestions";
-    addressInput.parentNode.insertBefore(list, addressInput.nextSibling);
+    const activateGooglePlaces = () => {
+        googleReady = true;
+        note.textContent = "Using Google Maps suggestions.";
 
-    const clearSuggestions = () => { list.innerHTML = ""; };
+        const autocomplete = new google.maps.places.Autocomplete(addressInput, {
+            componentRestrictions: { country: "bg" },
+            fields: ["formatted_address", "geometry"],
+            types: ["address"],
+        });
 
-    addressInput.addEventListener("input", () => {
-        latInput.value = "";
-        lngInput.value = "";
-        note.textContent = "";
-        clearSuggestions();
-
-        const q = addressInput.value.trim();
-        if (q.length < 3) return;
-
-        clearTimeout(debounce);
-        debounce = setTimeout(async () => {
-            try {
-                const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(q)}&limit=5&countrycodes=bg`;
-                const res = await fetch(url, { headers: { Accept: "application/json" } });
-                const data = await res.json();
-
-                data.forEach(item => {
-                    const li = document.createElement("li");
-                    li.textContent = item.display_name;
-                    li.className = "address-suggestion-item";
-                    li.addEventListener("click", () => {
-                        addressInput.value = item.display_name;
-                        // FIX: Round coordinates to 6 decimal places on click
-                        latInput.value = parseFloat(item.lat).toFixed(6);
-                        lngInput.value = parseFloat(item.lon).toFixed(6);
-                        clearSuggestions();
-                        note.textContent = "Location verified.";
-                    });
-                    list.appendChild(li);
-                });
-            } catch (e) {
-                // silent
-            }
-        }, 300);
-    });
-
-    document.addEventListener("click", (e) => {
-        if (!list.contains(e.target) && e.target !== addressInput) {
-            clearSuggestions();
-        }
-    });
-
-    form.addEventListener("submit", async (e) => {
-        if (submitRetryDone) return;
-        const hasAddress = addressInput.value.trim();
-        const hasCoords = latInput.value && lngInput.value;
-        
-        // If we have an address but no coordinates, try to fetch them
-        if (!hasAddress || hasCoords) return;
-
-        e.preventDefault();
-        note.textContent = "Verifying location...";
-
-        try {
-            const url = `https://nominatim.openstreetmap.org/search?format=jsonv2&q=${encodeURIComponent(hasAddress)}&limit=1&countrycodes=bg`;
-            const res = await fetch(url, { headers: { Accept: "application/json" } });
-            const data = await res.json();
-            if (data && data[0]) {
-                // FIX: Round coordinates to 6 decimal places on form submission
-                latInput.value = parseFloat(data[0].lat).toFixed(6);
-                lngInput.value = parseFloat(data[0].lon).toFixed(6);
-                note.textContent = "Location verified.";
-                submitRetryDone = true;
-                form.requestSubmit();
+        autocomplete.addListener("place_changed", () => {
+            const place = autocomplete.getPlace();
+            if (!place || !place.geometry || !place.geometry.location) {
+                latInput.value = "";
+                lngInput.value = "";
                 return;
             }
-        } catch (e) {
-            // silent
-        }
 
-        note.textContent = "Please pick a Bulgarian address from the suggestions.";
-    });
+            addressInput.value = place.formatted_address || addressInput.value;
+            latInput.value = Number(place.geometry.location.lat()).toFixed(6);
+            lngInput.value = Number(place.geometry.location.lng()).toFixed(6);
+            note.textContent = "Location verified.";
+        });
+
+        addressInput.addEventListener("input", () => {
+            latInput.value = "";
+            lngInput.value = "";
+        });
+
+        form.addEventListener("submit", (e) => {
+            const hasAddress = addressInput.value.trim();
+            const hasCoords = latInput.value && lngInput.value;
+            if (!hasAddress) return;
+            if (!hasCoords) {
+                e.preventDefault();
+                note.textContent = "Pick an address from Google suggestions so we can save the exact location.";
+            }
+        });
+    };
+
+    if (googleApiKey) {
+        window.__initSignupGooglePlaces = () => {
+            try {
+                if (window.google && google.maps && google.maps.places) {
+                    activateGooglePlaces();
+                    return;
+                }
+            } catch (e) {
+                // ignore
+            }
+            note.textContent = "Google Maps failed to load. Fix your API key restrictions / billing / Places API.";
+        };
+
+        const script = document.createElement("script");
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleApiKey)}&libraries=places&callback=__initSignupGooglePlaces`;
+        script.async = true;
+        script.defer = true;
+        script.onerror = () => {
+            note.textContent = "Google Maps failed to load. Fix your API key restrictions / billing / Places API.";
+        };
+        document.head.appendChild(script);
+    } else {
+        note.textContent = "Missing Google Maps API key.";
+    }
 })();
 </script>
 {% endblock %}
