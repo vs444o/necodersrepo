@@ -1,15 +1,18 @@
 from django import forms
 from django.contrib.auth.forms import UserCreationForm
 from decimal import Decimal, InvalidOperation
-from .models import User
 
-class ExtendedUserCreationForm(UserCreationForm):
+from .models import User, WorkerProfile
+
+
+class BaseSignupForm(UserCreationForm):
     latitude = forms.FloatField(required=False, widget=forms.HiddenInput(attrs={'id': 'id_latitude'}))
     longitude = forms.FloatField(required=False, widget=forms.HiddenInput(attrs={'id': 'id_longitude'}))
 
     class Meta(UserCreationForm.Meta):
         model = User
-        fields = UserCreationForm.Meta.fields + ('email', 'user_type', 'address', 'latitude', 'longitude')
+        # NOTE: user_type removed here
+        fields = UserCreationForm.Meta.fields + ('email', 'address', 'latitude', 'longitude')
         widgets = {
             'address': forms.TextInput(attrs={
                 'id': 'id_address_input',
@@ -30,19 +33,16 @@ class ExtendedUserCreationForm(UserCreationForm):
         lat = cleaned_data.get('latitude')
         lng = cleaned_data.get('longitude')
 
-        # Google-only: require coords if address is set
         if address and (lat is None or lng is None):
             self.add_error('address', 'Моля, изберете адрес от предложенията.')
             return cleaned_data
 
-        # Quantize whatever came from frontend (Google) to 6 decimals
         try:
             cleaned_data['latitude'] = self._to_decimal_6(lat)
             cleaned_data['longitude'] = self._to_decimal_6(lng)
         except (InvalidOperation, TypeError, ValueError):
             pass
 
-        # Final check for Bulgaria boundaries
         lat = cleaned_data.get('latitude')
         lng = cleaned_data.get('longitude')
         if lat is not None and lng is not None:
@@ -52,21 +52,39 @@ class ExtendedUserCreationForm(UserCreationForm):
         return cleaned_data
 
     def full_clean(self):
-        """
-        Custom bypass for strict password validation rules.
-        This intercepts the errors after they are generated and clears 
-        the ones blocking you from using simple passwords.
-        """
         super().full_clean()
         if 'password1' in self._errors:
-            # We keep only the error if passwords don't match.
-            # We remove "too common", "entirely numeric", "no uppercase", etc.
             new_pw_errors = [
-                error for error in self._errors['password1'] 
+                error for error in self._errors['password1']
                 if "match" in str(error).lower() or "too short" in str(error).lower()
             ]
-            
             if not new_pw_errors:
                 del self._errors['password1']
             else:
                 self._errors['password1'] = new_pw_errors
+
+
+class NeederSignupForm(BaseSignupForm):
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.user_type = 'needer'  # force role here
+        if commit:
+            user.save()
+        return user
+
+
+class WorkerSignupForm(BaseSignupForm):
+    phone = forms.CharField(max_length=30, required=False)
+    skills = forms.CharField(widget=forms.Textarea(attrs={'rows': 3}), required=False)
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.user_type = 'worker'  # force role here
+        if commit:
+            user.save()
+            WorkerProfile.objects.create(
+                user=user,
+                phone=self.cleaned_data.get('phone', ''),
+                skills=self.cleaned_data.get('skills', ''),
+            )
+        return user

@@ -70,7 +70,7 @@
                 <p style="color:green; font-weight:600;">🎉 Job completed!</p>
                 
                 {% if offer.id in rated_offer_ids %}
-                    <p style="color:var(--muted); font-size:0.9rem;">Rating submitted. Thank you!</p>
+                    <p style="color:var(--muted); font-size:0.9rem;">Оценката бе изпратена, благодаря Ви!</p>
                 {% else %}
                     <h3 style="font-size:1.1rem; margin-bottom:0.8rem;">Rate the help you received:</h3>
                     <form method="post" action="{% url 'rate_offer' offer.pk %}" style="max-width:400px;">
@@ -86,7 +86,7 @@
                         </div>
 
                         <div style="margin-bottom:1rem;">
-                            <label style="display:block; font-size:0.85rem; color:#555;">Behaviour</label>
+                            <label style="display:block; font-size:0.85rem; color:#555;">Отношение</label>
                             <div style="display:flex; align-items:center; gap:10px;">
                                 <input type="range" name="behaviour" min="1" max="5" step="0.5" value="5" 
                                        style="flex:1;" oninput="this.nextElementSibling.value = this.value">
@@ -95,7 +95,7 @@
                         </div>
 
                         <div style="margin-bottom:1.5rem;">
-                            <label style="display:block; font-size:0.85rem; color:#555;">Speed</label>
+                            <label style="display:block; font-size:0.85rem; color:#555;">Скорост</label>
                             <div style="display:flex; align-items:center; gap:10px;">
                                 <input type="range" name="speed" min="1" max="5" step="0.5" value="5" 
                                        style="flex:1;" oninput="this.nextElementSibling.value = this.value">
@@ -103,7 +103,7 @@
                             </div>
                         </div>
 
-                        <button type="submit" class="btn btn--secondary btn--sm">Submit Rating</button>
+                        <button type="submit" class="btn btn--secondary btn--sm">Изпратете оценката</button>
                     </form>
                 {% endif %}
             </div>

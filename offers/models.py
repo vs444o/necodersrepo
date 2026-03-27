@@ -101,6 +101,14 @@ class User(AbstractUser):
         agg = Rating.objects.filter(worker=self).aggregate(avg=Avg('overall_score'))
         return agg['avg']
 
+class WorkerProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='worker_profile')
+    phone = models.CharField(max_length=30, blank=True)
+    skills = models.TextField(blank=True)
+    
+    def __str__(self):
+        return f"WorkerProfile({self.user.username})"
+
 class Application(models.Model):
     STATUS_CHOICES = [
         ('pending',  'Pending'),    
@@ -161,3 +169,4 @@ class Notification(models.Model):
  
     def __str__(self):
         return f"{'READ' if self.read else 'UNREAD'} → {self.user.username}: {self.message[:50]}"
+

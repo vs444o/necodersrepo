@@ -42,7 +42,7 @@
                                 {% if app.worker.average_rating %}
                                     ⭐ {{ app.worker.average_rating|floatformat:1 }}/5 overall
                                 {% else %}
-                                    No ratings yet
+                                    Нямате оценки
                                 {% endif %}
                             </div>
                         </div>
@@ -96,7 +96,7 @@
                                     </select>
                                 </label>
                             </div>
-                            <button type="submit" class="btn btn--primary btn--sm" style="margin-top:10px;">Submit rating</button>
+                            <button type="submit" class="btn btn--primary btn--sm" style="margin-top:10px;">Напишете оценка</button>
                         </form>
                     </div>
                 {% endif %}
@@ -115,7 +115,8 @@
             <h1>Помощ наблизо — лесно и спокойно</h1>
             <p class="hero-subtitle"><b>HelpNow свързва хора, които имат нужда от помощ, с доброволци наблизо — за пазаруване, почистване и домашни задачи.</b></p>
             <div class="hero-actions">
-                <a class="btn btn--primary btn--lg" href="{% url 'signup' %}">Регистрация</a>
+                <a class="btn btn--primary btn--lg" href="{% url 'signup_needer' %}">Регистрация (Търся помощ)</a>
+                <a class="btn btn--secondary btn--lg" href="{% url 'signup_worker' %}">Регистрация (Искам да помагам)</a>
                 <a class="btn btn--secondary btn--lg" href="{% url 'login' %}">Вход</a>
             </div>
         </section>

@@ -22,11 +22,11 @@
             {{ form.email }}
             {% if form.email.errors %}{{ form.email.errors }}{% endif %}
         </p>
-        <p>
+        <!-- <p>
             <label for="{{ form.user_type.id_for_label }}">Вие сте *</label>
             {{ form.user_type }}
             {% if form.user_type.errors %}{{ form.user_type.errors }}{% endif %}
-        </p>
+        </p> -->
         <p>
             <label for="{{ form.password1.id_for_label }}">Парола *</label>
             {{ form.password1 }}
@@ -61,6 +61,18 @@
                     {% endfor %}
                 </ul>
             </div>
+        {% endif %}
+        {% if signup_kind == 'worker' %}
+        <p>
+            <label for="{{ form.phone.id_for_label }}">Телефон</label>
+            {{ form.phone }}
+            {% if form.phone.errors %}{{ form.phone.errors }}{% endif %}
+        </p>
+        <p>
+            <label for="{{ form.skills.id_for_label }}">Умения</label>
+            {{ form.skills }}
+            {% if form.skills.errors %}{{ form.skills.errors }}{% endif %}
+        </p>
         {% endif %}
 
         <p id="location-note" class="help-text"></p>

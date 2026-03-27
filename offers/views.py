@@ -6,8 +6,7 @@ from django.utils import timezone
 from django.conf import settings
 from django.views.decorators.http import require_POST
 from django.db.models import Avg
-
-from .forms import ExtendedUserCreationForm
+from .forms import NeederSignupForm, WorkerSignupForm
 from .models import Offer, Application, Notification, Rating
 
 
@@ -258,16 +257,31 @@ def rate_offer(request, pk):
     return redirect('home')
 
 
-def signup_view(request):
+def signup_needer(request):
     if request.method == 'POST':
-        form = ExtendedUserCreationForm(request.POST)
+        form = NeederSignupForm(request.POST)
         if form.is_valid():
             user = form.save()
             login(request, user)
             return redirect('home')
     else:
-        form = ExtendedUserCreationForm()
+        form = NeederSignupForm()
     return render(request, 'registration/signup.html', {
         'form': form,
         'google_maps_api_key': settings.GOOGLE_MAPS_API_KEY,
+        'signup_kind': 'needer',
+    })
+def signup_worker(request):
+    if request.method == 'POST':
+        form = WorkerSignupForm(request.POST)
+        if form.is_valid():
+            user = form.save()
+            login(request, user)
+            return redirect('home')
+    else:
+        form = WorkerSignupForm()
+    return render(request, 'registration/signup.html', {
+        'form': form,
+        'google_maps_api_key': settings.GOOGLE_MAPS_API_KEY,
+        'signup_kind': 'worker',
     })
