@@ -81,6 +81,8 @@ def post_offer(request):
             offer_type=request.POST['offer_type'],
             price=request.POST.get('price') or None,
             location=request.POST['location'],
+            city=request.POST.get('city'),
+            # Rounding to 6 decimals for database constraints
             latitude=round(float(lat), 6) if lat else None,
             longitude=round(float(lng), 6) if lng else None,
             status='waiting',

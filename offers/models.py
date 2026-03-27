@@ -29,6 +29,7 @@ class Offer(models.Model):
     description = models.TextField()
     category = models.CharField(max_length=50, choices=CATEGORY_CHOICES)
     offer_type = models.CharField(max_length=20, choices=TYPE_CHOICES)
+    city = models.CharField(max_length=100)
     address = models.CharField(max_length=200, blank=True, default='')
     price = models.DecimalField(max_digits=8, decimal_places=2, null=True, blank=True)
     location = models.CharField(max_length=200)
