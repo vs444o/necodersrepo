@@ -20,6 +20,16 @@ def home(request):
         unread = list(request.user.notifications.filter(read=False))
         request.user.notifications.filter(read=False).update(read=True)
         return render(request, 'offers/home.html', {'offers': offers, 'unread': unread})
+    if request.user.is_authenticated and request.user.user_type == 'worker':
+        applications = Application.objects.filter(worker=request.user)
+        stats = {
+            'applied': applications.filter(status='pending').count(),
+            'accepted': applications.filter(status='accepted').count(),
+            'completed': applications.filter(status='completed').count(),
+        }
+        unread = list(request.user.notifications.filter(read=False))
+        request.user.notifications.filter(read=False).update(read=True)
+        return render(request, 'offers/home.html', {'stats': stats, 'unread': unread})
     return render(request, 'offers/home.html')
 
 

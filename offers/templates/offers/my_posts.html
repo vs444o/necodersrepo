@@ -11,9 +11,7 @@
 <section class="container">
 
     {% for notif in unread %}
-        <div style="background:#e8f4fd;border-left:4px solid #3b82f6;padding:.75rem 1rem;margin-bottom:.75rem;border-radius:4px;">
-            🔔 {{ notif.message }}
-        </div>
+        <div class="notif-banner">{{ notif.message }}</div>
     {% endfor %}
 
     {% if not offers %}
