@@ -42,6 +42,14 @@
             </p>
             <ul style="padding-left:1.1rem;margin:0;color:var(--muted);font-size:0.98rem;">
                 <li><strong>People helped:</strong> {{ unique_needers_helped|default:"0" }}</li>
+                <li>
+                    <strong>Your rating:</strong>
+                    {% if avg_rating %}
+                        {{ avg_rating|floatformat:1 }}/5
+                    {% else %}
+                        No ratings yet
+                    {% endif %}
+                </li>
             </ul>
         </article>
     </section>

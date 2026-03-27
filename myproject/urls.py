@@ -17,6 +17,7 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path, include
 from offers import views
+from django.contrib.auth import views as auth_views
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -26,10 +27,14 @@ urlpatterns = [
     path('offer/<int:pk>/accept/', views.accept_offer, name='accept_offer'),
     path('offer/<int:pk>/complete/', views.complete_offer, name='complete_offer'),
     path('offer/<int:pk>/apply/', views.apply_offer, name='apply_offer'),
-    # Added this to fix the NoReverseMatch error in find.html
+    path('offer/<int:pk>/rate/', views.rate_offer, name='rate_offer'),
     path('offer/<int:pk>/', views.home, name='offer_detail'), 
     path('signup/', views.signup_view, name='signup'),
+    
+    # Fix for the 404 at /accounts/login/
+    path('accounts/login/', auth_views.LoginView.as_view(), name='login'),
     path('accounts/', include('django.contrib.auth.urls')),
+    
     path('my-posts/', views.my_posts, name='my_posts'),
     path('application/<int:pk>/accept/', views.accept_application, name='accept_application'),
     path('my-jobs/', views.my_jobs, name='my_jobs'),
