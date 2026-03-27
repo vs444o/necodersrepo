@@ -7,13 +7,14 @@ from urllib.request import urlopen, Request
 from .models import User
 
 class ExtendedUserCreationForm(UserCreationForm):
+    latitude = forms.FloatField(required=False, widget=forms.HiddenInput(attrs={'id': 'id_latitude'}))
+    longitude = forms.FloatField(required=False, widget=forms.HiddenInput(attrs={'id': 'id_longitude'}))
+
     class Meta(UserCreationForm.Meta):
         model = User
         fields = UserCreationForm.Meta.fields + ('email', 'user_type', 'address', 'latitude', 'longitude')
         widgets = {
             'address': forms.TextInput(attrs={'id': 'id_address_input', 'autocomplete': 'off'}),
-            'latitude': forms.HiddenInput(attrs={'id': 'id_latitude'}),
-            'longitude': forms.HiddenInput(attrs={'id': 'id_longitude'}),
         }
 
     def _geocode_with_nominatim(self, address):
@@ -37,25 +38,11 @@ class ExtendedUserCreationForm(UserCreationForm):
             return None
         return lat, lon
 
-    def clean_latitude(self):
-        lat = self.cleaned_data.get('latitude')
-        if lat:
-            try:
-                # Force rounding to 6 decimal places on the server side
-                return Decimal(str(lat)).quantize(Decimal('0.000001'))
-            except (InvalidOperation, TypeError, ValueError):
-                return lat
-        return lat
-
-    def clean_longitude(self):
-        lon = self.cleaned_data.get('longitude')
-        if lon:
-            try:
-                # Force rounding to 6 decimal places on the server side
-                return Decimal(str(lon)).quantize(Decimal('0.000001'))
-            except (InvalidOperation, TypeError, ValueError):
-                return lon
-        return lon
+    def _to_decimal_6(self, value):
+        if value is None or value == "":
+            return None
+        precision = Decimal('0.000001')
+        return Decimal(str(value)).quantize(precision)
 
     def clean(self):
         cleaned_data = super().clean()
@@ -73,13 +60,19 @@ class ExtendedUserCreationForm(UserCreationForm):
 
             if resolved is not None:
                 try:
-                    precision = Decimal('0.000001')
-                    lat = Decimal(str(resolved[0])).quantize(precision)
-                    lng = Decimal(str(resolved[1])).quantize(precision)
+                    lat = self._to_decimal_6(resolved[0])
+                    lng = self._to_decimal_6(resolved[1])
                     cleaned_data['latitude'] = lat
                     cleaned_data['longitude'] = lng
                 except (InvalidOperation, TypeError, ValueError):
                     pass
+        else:
+            # Quantize whatever came from frontend (Google/Nominatim) to 6 decimals
+            try:
+                cleaned_data['latitude'] = self._to_decimal_6(lat)
+                cleaned_data['longitude'] = self._to_decimal_6(lng)
+            except (InvalidOperation, TypeError, ValueError):
+                pass
 
         # Final check for Bulgaria boundaries
         lat = cleaned_data.get('latitude')
