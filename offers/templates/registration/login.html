@@ -1,24 +1,36 @@
 {% extends "base.html" %}
 
-{% block title %}Log in - HelpNow{% endblock %}
+{% block title %}Вход · HelpNow{% endblock %}
 
 {% block content %}
 <section class="container auth-shell">
     <form method="post" class="app-form auth-form">
         {% csrf_token %}
-        <h1>Log in</h1>
+        <h1>Вход</h1>
+        <p class="help-text" style="margin-top:0;">
+            Въведете потребителското си име и паролата.
+        </p>
 
         {% if form.errors %}
             <div class="form-errors" role="alert">
-                Wrong email/username or password. Please try again.
+                Грешно потребителско име или парола. Моля, опитайте отново.
             </div>
         {% endif %}
 
-        {{ form.as_p }}
-        <input type="submit" value="Log in" class="btn btn--primary btn--block">
+        <p>
+            <label for="{{ form.username.id_for_label }}">Потребителско име</label>
+            {{ form.username }}
+            {% if form.username.errors %}{{ form.username.errors }}{% endif %}
+        </p>
+        <p>
+            <label for="{{ form.password.id_for_label }}">Парола</label>
+            {{ form.password }}
+            {% if form.password.errors %}{{ form.password.errors }}{% endif %}
+        </p>
+        <input type="submit" value="Вход" class="btn btn--primary btn--block">
 
         <p class="form-footer">
-            Do not have an account? <a href="{% url 'signup' %}">Create one</a>.
+            Нямате профил? <a href="{% url 'signup' %}">Регистрация</a>.
         </p>
     </form>
 </section>

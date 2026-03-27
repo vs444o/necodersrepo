@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 
-{% block title %}My Jobs – HelpNow{% endblock %}
+{% block title %}Моите задачи · HelpNow{% endblock %}
 
 {% block content %}
 <section class="container page-header">
-    <h1>My Jobs</h1>
-    <p>Track what you’re working on now and what you’ve already completed.</p>
+    <h1>Моите задачи</h1>
+    <p>Тук виждате текущите си задачи и завършените (история).</p>
 </section>
 
 <section class="container">
@@ -17,12 +17,12 @@
     {% endfor %}
 
     {% if not applications %}
-        <p>You haven't applied to anything yet. <a href="{% url 'dashboard' %}">Browse requests on your dashboard →</a></p>
+        <p>Все още не сте кандидатствали за задача. <a href="{% url 'dashboard' %}">Вижте молбите в таблото →</a></p>
     {% endif %}
 
     {% with current=applications|dictsortreversed:"created_at" %}
     <section style="margin-top:1rem;margin-bottom:2rem;">
-        <h2 style="font-size:1.2rem;margin-bottom:0.75rem;">Current jobs</h2>
+        <h2 style="font-size:1.2rem;margin-bottom:0.75rem;">Текущи задачи</h2>
         {% with active_list=applications|dictsortreversed:"created_at" %}
         {% for app in active_list %}
             {% if app.offer.status == 'waiting' or app.offer.status == 'accepted' %}
@@ -33,46 +33,52 @@
             {# We show the APPLICATION status, not the offer status #}
             {# This tells the worker exactly where they stand personally #}
             {% if app.status == 'pending' %}
-                <span class="chip chip--waiting">Pending</span>
+                <span class="chip chip--waiting">Чака отговор</span>
             {% elif app.status == 'accepted' %}
-                <span class="chip chip--accepted">Accepted ✅</span>
+                {% if app.offer.status == 'accepted' %}
+                    <span class="chip chip--waiting">Очаква изпълнение</span>
+                {% elif app.offer.status == 'completed' %}
+                    <span class="chip chip--completed">Готово</span>
+                {% else %}
+                    <span class="chip chip--accepted">Прието ✅</span>
+                {% endif %}
             {% elif app.status == 'rejected' %}
-                <span class="chip chip--completed">Not chosen</span>
+                <span class="chip chip--completed">Не сте избран/а</span>
             {% endif %}
         </div>
 
         <p style="color:var(--muted,#888);font-size:.9rem;">
-            {{ app.offer.get_category_display }} · {{ app.offer.location }} · applied {{ app.created_at|date:"d M Y" }}
+            {{ app.offer.get_category_display }} · {{ app.offer.location }} · заявено на {{ app.created_at|date:"d.m.Y" }}
         </p>
 
         <p>{{ app.offer.description }}</p>
 
         {% if app.offer.price %}
-            <p style="font-size:.9rem;">💰 EUR {{ app.offer.price }}</p>
+            <p style="font-size:.9rem;">💰 {{ app.offer.price }} EUR</p>
         {% endif %}
 
         {# Mark as Done button — only if this worker was accepted AND offer is still accepted (not completed yet) #}
         {% if app.status == 'accepted' and app.offer.status == 'accepted' %}
             <form method="post" action="{% url 'complete_offer' app.offer.pk %}">
                 {% csrf_token %}
-                <button type="submit" class="btn btn--primary btn--block">Mark as done</button>
+                <button type="submit" class="btn btn--primary btn--block">Отбележи като готово</button>
             </form>
         {% endif %}
 
         {% if app.offer.status == 'completed' %}
-            <p style="color:green;margin-top:.75rem;">🎉 Completed on {{ app.offer.completed_at|date:"d M Y" }}</p>
+            <p style="color:green;margin-top:.75rem;">🎉 Завършено на {{ app.offer.completed_at|date:"d.m.Y" }}</p>
         {% endif %}
 
     </article>
             {% endif %}
         {% empty %}
-            <p>No current jobs. Check your <a href="{% url 'dashboard' %}">dashboard</a> for new requests.</p>
+            <p>Нямате текущи задачи. Вижте <a href="{% url 'dashboard' %}">таблото</a> за нови молби.</p>
         {% endfor %}
         {% endwith %}
     </section>
 
     <section>
-        <h2 style="font-size:1.2rem;margin-bottom:0.75rem;">Completed jobs (history)</h2>
+        <h2 style="font-size:1.2rem;margin-bottom:0.75rem;">Завършени задачи (история)</h2>
         {% with done_list=applications|dictsortreversed:"created_at" %}
         {% for app in done_list %}
             {% if app.offer.status == 'completed' %}
@@ -80,25 +86,25 @@
 
         <div class="card-head">
             <h2>{{ app.offer.title }}</h2>
-            <span class="chip chip--completed">Done</span>
+            <span class="chip chip--completed">Готово</span>
         </div>
 
         <p style="color:var(--muted,#888);font-size:.9rem;">
-            {{ app.offer.get_category_display }} · {{ app.offer.location }} · completed {{ app.offer.completed_at|date:"d M Y" }}
+            {{ app.offer.get_category_display }} · {{ app.offer.location }} · завършено на {{ app.offer.completed_at|date:"d.m.Y" }}
         </p>
 
         <p>{{ app.offer.description }}</p>
 
         {% if app.offer.price %}
-            <p style="font-size:.9rem;">💰 EUR {{ app.offer.price }}</p>
+            <p style="font-size:.9rem;">💰 {{ app.offer.price }} EUR</p>
         {% endif %}
 
-        <p style="color:green;margin-top:.75rem;">🎉 Completed on {{ app.offer.completed_at|date:"d M Y" }}</p>
+        <p style="color:green;margin-top:.75rem;">🎉 Завършено на {{ app.offer.completed_at|date:"d.m.Y" }}</p>
 
     </article>
             {% endif %}
         {% empty %}
-            <p>No completed jobs yet.</p>
+            <p>Все още нямате завършени задачи.</p>
         {% endfor %}
         {% endwith %}
     </section>

@@ -4,7 +4,7 @@
 {% block content %}
 <section class="container">
     {% if user.is_authenticated and user.user_type == "needer" %}
-        <h1 style="margin-top: 20px;">My Posted Help Requests</h1>
+        <h1 style="margin-top: 20px;">Моите публикувани молби</h1>
 
         {% if unread %}
         <div style="margin-bottom: 25px;">
@@ -17,7 +17,7 @@
         {% endif %}
 
         <div style="margin-bottom: 40px; display: flex; gap: 15px;">
-            <a class="btn btn--primary btn--lg" href="{% url 'post_offer' %}">➕ Post New Request</a>
+            <a class="btn btn--primary btn--lg" href="{% url 'post_offer' %}">➕ Публикувай нова молба</a>
         </div>
 
         <div class="my-offers-list">
@@ -31,58 +31,58 @@
                 <p style="color:#555;line-height:1.6;margin-bottom:15px;">{{ offer.description }}</p>
 
                 <div style="background:#fcfcfc;border:1px solid #efefef;padding:15px;border-radius:10px;">
-                    <h4 style="margin-top:0;border-bottom:1px solid #eee;padding-bottom:8px;color:#444;">Volunteer Applicants</h4>
+                    <h4 style="margin-top:0;border-bottom:1px solid #eee;padding-bottom:8px;color:#444;">Кандидати (доброволци)</h4>
 
                     {% for app in offer.applications.all %}
                     <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #f0f0f0;">
                         <div>
                             <span style="font-weight:600;color:#2c3e50;">{{ app.worker.username }}</span>
-                            <span style="color:#888;font-size:0.9em;margin-left:8px;">Applied on {{ app.created_at|date:"M d" }}</span>
+                            <span style="color:#888;font-size:0.9em;margin-left:8px;">Кандидатствал/а на {{ app.created_at|date:"d M" }}</span>
                         </div>
 
                         {% if offer.status == 'waiting' and app.status == 'pending' %}
                             <form method="post" action="{% url 'accept_application' app.id %}" style="margin:0;">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn--primary btn--sm">Accept Helper</button>
+                                <button type="submit" class="btn btn--primary btn--sm">Избери доброволец</button>
                             </form>
                         {% elif app.status == 'accepted' %}
-                            <span style="color:#27ae60;font-weight:700;">✓ Assigned Helper</span>
+                            <span style="color:#27ae60;font-weight:700;">✓ Избран доброволец</span>
                         {% endif %}
                     </div>
                     {% empty %}
-                    <p style="font-style:italic;color:#aaa;margin:10px 0 0 0;text-align:center;">No one has applied yet.</p>
+                    <p style="font-style:italic;color:#aaa;margin:10px 0 0 0;text-align:center;">Все още няма кандидати.</p>
                     {% endfor %}
                 </div>
             </article>
             {% empty %}
             <div style="text-align:center;padding:60px 20px;background:#f8f9fa;border-radius:15px;border:2px dashed #ddd;">
-                <h3 style="color:#888;">You haven't posted any jobs yet.</h3>
-                <p style="color:#aaa;margin-bottom:25px;"><b>Need a hand with something? Post your first request now.</b></p>
-                <a href="{% url 'post_offer' %}" class="btn btn--primary">Post a Request</a>
+                <h3 style="color:#888;">Все още нямате публикувани молби.</h3>
+                <p style="color:#aaa;margin-bottom:25px;"><b>Имате нужда от помощ? Публикувайте първата си молба.</b></p>
+                <a href="{% url 'post_offer' %}" class="btn btn--primary">Публикувай молба</a>
             </div>
             {% endfor %}
         </div>
 
     {% else %}
         <section class="hero">
-            <h1>Daily support for people who need a hand</h1>
-            <p class="hero-subtitle"><b>HelpNow connects older adults and families with nearby helpers for shopping, cleaning, home tasks, and companionship.</b></p>
+            <h1>Помощ наблизо — лесно и спокойно</h1>
+            <p class="hero-subtitle"><b>HelpNow свързва хора, които имат нужда от помощ, с доброволци наблизо — за пазаруване, почистване и домашни задачи.</b></p>
             <div class="hero-actions">
-                <a class="btn btn--primary btn--lg" href="{% url 'signup' %}">Create Account</a>
-                <a class="btn btn--secondary btn--lg" href="{% url 'login' %}">Log In</a>
+                <a class="btn btn--primary btn--lg" href="{% url 'signup' %}">Регистрация</a>
+                <a class="btn btn--secondary btn--lg" href="{% url 'login' %}">Вход</a>
             </div>
         </section>
 
         <section class="container info-grid" style="margin-top:50px;">
             <article class="panel" style="text-align:center;">
                 <div style="font-size:3rem;margin-bottom:15px;">🤝</div>
-                <h2>For Help Needers</h2>
-                <p style="color:#7f8c8d;line-height:1.6;"><b>Post your tasks, review volunteer profiles, and pick the best person for the job.</b></p>
+                <h2>Търсите помощ</h2>
+                <p style="color:#7f8c8d;line-height:1.6;"><b>Публикувайте молба и изберете доброволец, който да ви помогне.</b></p>
             </article>
             <article class="panel" style="text-align:center;">
                 <div style="font-size:3rem;margin-bottom:15px;">🛠️</div>
-                <h2>For Volunteers</h2>
-                <p style="color:#7f8c8d;line-height:1.6;"><b>Browse a live map of people needing help in your area and apply for jobs.</b></p>
+                <h2>Искате да помогнете</h2>
+                <p style="color:#7f8c8d;line-height:1.6;"><b>Вижте молбите наблизо и кандидатствайте, ако можете да помогнете.</b></p>
             </article>
         </section>
     {% endif %}

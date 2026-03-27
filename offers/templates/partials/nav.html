@@ -7,23 +7,23 @@
         </a>
         <div class="nav-actions">
             {% if user.is_authenticated and user.user_type == "worker" %}
-                <a class="nav-link" href="{% url 'dashboard' %}">Dashboard</a>
-                <a class="nav-link" href="{% url 'my_jobs' %}">My Jobs</a>
+                <a class="nav-link" href="{% url 'dashboard' %}">Табло</a>
+                <a class="nav-link" href="{% url 'my_jobs' %}">Моите задачи</a>
             {% elif user.is_authenticated and user.user_type == "needer" %}
-                <a class="nav-link" href="{% url 'home' %}">Home</a>
-                <a class="nav-link" href="{% url 'post_offer' %}">Post a request</a>
-                <a class="nav-link" href="{% url 'my_posts' %}">My Posts</a>
+                <a class="nav-link" href="{% url 'home' %}">Начало</a>
+                <a class="nav-link" href="{% url 'post_offer' %}">Публикувай молба</a>
+                <a class="nav-link" href="{% url 'my_posts' %}">Моите публикации</a>
             {% endif %}
 
             {% if user.is_authenticated %}
-                <span class="user-pill">{{ user.username }} ({% if user.user_type == 'worker' %}Volunteer{% else %}Help Needer{% endif %})</span>
+                <span class="user-pill">{{ user.username }} ({% if user.user_type == 'worker' %}Доброволец{% else %}Търся помощ{% endif %})</span>
                 <form action="{% url 'logout' %}" method="post" class="nav-logout-form">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn--secondary btn--sm">Logout</button>
+                    <button type="submit" class="btn btn--secondary btn--sm">Изход</button>
                 </form>
             {% else %}
-                <a class="btn btn--secondary btn--sm" href="{% url 'login' %}">Log in</a>
-                <a class="btn btn--primary btn--sm" href="{% url 'signup' %}">Sign up</a>
+                <a class="btn btn--secondary btn--sm" href="{% url 'login' %}">Вход</a>
+                <a class="btn btn--primary btn--sm" href="{% url 'signup' %}">Регистрация</a>
             {% endif %}
         </div>
     </div>

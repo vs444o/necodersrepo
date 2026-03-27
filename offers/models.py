@@ -3,13 +3,13 @@ from django.contrib.auth.models import AbstractUser
 
 class Offer(models.Model):
     CATEGORY_CHOICES = [
-        ('cleaning', '🧹 Cleaning'),
-        ('groceries', '🛒 Groceries'),
-        ('transport', '🚗 Transport'),
-        ('tech', '💻 Tech Help'),
-        ('gardening', '🌿 Gardening'),
-        ('cooking', '🍲 Cooking'),
-        ('other', '✨ Other'),
+        ('cleaning', '🧹 Чистене'),
+        ('groceries', '🛒 Пазаруване'),
+        ('transport', '🚗 Транспорт'),
+        ('tech', '💻 Помощ с техника'),
+        ('gardening', '🌿 Помощ с градината'),
+        ('cooking', '🍲 Готвене'),
+        ('other', '✨ Друго'),
     ]
 
     TYPE_CHOICES = [
@@ -79,8 +79,8 @@ class Offer(models.Model):
 
 class User(AbstractUser):
     USER_TYPES = (
-        ('worker', 'Volunteer / Worker'),
-        ('needer', 'Help Needer'),
+        ('worker', 'Доброволец/Работник'),
+        ('needer', 'Търсещ помощ'),
     )
     user_type = models.CharField(max_length=10, choices=USER_TYPES, default='needer')
     address = models.CharField(max_length=255, blank=True)

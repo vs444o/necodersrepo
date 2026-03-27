@@ -1,9 +1,9 @@
 {% extends "base.html" %}
-{% block title %}Find Help Requests - HelpNow{% endblock %}
+{% block title %}Молби за помощ · HelpNow{% endblock %}
 
 {% block content %}
 <section class="container">
-    <h1>People Needing Help Near You</h1>
+    <h1>Молби за помощ наблизо</h1>
 
     <div id="map" style="height:400px; width: 100%; border-radius: 16px; margin-bottom: 10px; border: 4px solid #ddd;"></div>
 
@@ -23,7 +23,7 @@
 
             <dl class="meta-grid">
                 <div>
-                    <dt>Location</dt>
+                    <dt>Място</dt>
                     <dd>
                         {% if user.is_authenticated and user == offer.accepted_by %}
                             {{ offer.location }}
@@ -31,34 +31,34 @@
                             {{ offer.city }}
                         {% endif %}
                         {% if offer.distance_km is not None %}
-                            ({{ offer.distance_km }} km away)
+                            ({{ offer.distance_km }} км)
                         {% endif %}
                     </dd>
                 </div>
                 <div>
-                    <dt>Category</dt>
+                    <dt>Категория</dt>
                     <dd>{{ offer.get_category_display }}</dd>
                 </div>
                 <div>
-                    <dt>Type</dt>
+                    <dt>Вид</dt>
                     <dd>{{ offer.offer_type|title }}</dd>
                 </div>
                 <div>
-                    <dt>Price</dt>
-                    <dd>{% if offer.price %}EUR {{ offer.price }}{% else %}Volunteer{% endif %}</dd>
+                    <dt>Заплащане</dt>
+                    <dd>{% if offer.price %}{{ offer.price }} EUR{% else %}Доброволно{% endif %}</dd>
                 </div>
             </dl>
 
-            <p class="meta-note">Posted by {{ offer.created_by.username|default:offer.name }}</p>
+            <p class="meta-note">Публикувано от {{ offer.created_by.username|default:offer.name }}</p>
             <p class="distance-label" style="color:#27ae60;font-weight:bold;"></p>
 
             {% if user.is_authenticated and user.user_type == 'worker' and offer.status == 'waiting' %}
                 {% if offer.id in already_applied_ids %}
-                    <button class="btn btn--secondary btn--block" disabled>Applied ✓</button>
+                    <button class="btn btn--secondary btn--block" disabled>Кандидатствано ✓</button>
                 {% else %}
                     <form method="post" action="{% url 'apply_offer' offer.id %}" class="inline-action-form">
                         {% csrf_token %}
-                        <button type="submit" class="btn btn--primary btn--block">Apply</button>
+                        <button type="submit" class="btn btn--primary btn--block">Кандидатствай</button>
                     </form>
                 {% endif %}
             {% endif %}
@@ -66,14 +66,14 @@
             {% if user.is_authenticated and offer.status == 'accepted' and offer.accepted_by == user %}
                 <form method="post" action="{% url 'complete_offer' offer.id %}" class="inline-action-form">
                     {% csrf_token %}
-                    <button type="submit" class="btn btn--secondary btn--block">Mark as done</button>
+                    <button type="submit" class="btn btn--secondary btn--block">Отбележи като готово</button>
                 </form>
             {% endif %}
 
         </article>
         {% empty %}
         <div class="empty-state">
-            <p>No requests yet.</p>
+            <p>В момента няма нови молби.</p>
         </div>
         {% endfor %}
     </div>
@@ -123,7 +123,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     fillColor: '#3498db',
                     fillOpacity: 0.8,
                     radius: 10
-                }).addTo(map).bindPopup("<b>You are here</b>").openPopup();
+                }).addTo(map).bindPopup("<b>Вие сте тук</b>").openPopup();
                 map.setView([lat, lng], 13);
             }
 
@@ -132,7 +132,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 const oLng = parseFloat(card.dataset.lng);
                 const distLabel = card.querySelector('.distance-label');
                 if (!isNaN(oLat) && !isNaN(oLng) && distLabel) {
-                    distLabel.textContent = `📍 ${getDistance(lat, lng, oLat, oLng)} km away from you`;
+                    distLabel.textContent = `📍 ${getDistance(lat, lng, oLat, oLng)} км от вас`;
                 }
             });
 

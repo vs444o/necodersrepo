@@ -1,44 +1,47 @@
 {% extends "base.html" %}
 
-{% block title %}Sign up - HelpNow{% endblock %}
+{% block title %}Регистрация · HelpNow{% endblock %}
 
 {% block content %}
 <section class="container auth-shell">
     <form method="post" class="app-form auth-form" id="signup-form">
         {% csrf_token %}
-        <h1>Create account</h1>
+        <h1>Регистрация</h1>
+        <p class="help-text" style="margin-top:0;">
+            Полетата с * са задължителни. Ако имате нужда, помолете близък човек да помогне.
+        </p>
         {{ form.non_field_errors }}
 
         <p>
-            {{ form.username.label_tag }}
+            <label for="{{ form.username.id_for_label }}">Потребителско име *</label>
             {{ form.username }}
             {% if form.username.errors %}{{ form.username.errors }}{% endif %}
         </p>
         <p>
-            {{ form.email.label_tag }}
+            <label for="{{ form.email.id_for_label }}">Имейл</label>
             {{ form.email }}
             {% if form.email.errors %}{{ form.email.errors }}{% endif %}
         </p>
         <p>
-            {{ form.user_type.label_tag }}
+            <label for="{{ form.user_type.id_for_label }}">Вие сте *</label>
             {{ form.user_type }}
             {% if form.user_type.errors %}{{ form.user_type.errors }}{% endif %}
         </p>
         <p>
-            {{ form.password1.label_tag }}
+            <label for="{{ form.password1.id_for_label }}">Парола *</label>
             {{ form.password1 }}
             {% if form.password1.errors %}{{ form.password1.errors }}{% endif %}
         </p>
         <p>
-            {{ form.password2.label_tag }}
+            <label for="{{ form.password2.id_for_label }}">Повторете паролата *</label>
             {{ form.password2 }}
             {% if form.password2.errors %}{{ form.password2.errors }}{% endif %}
         </p>
 
         <p>
-            {{ form.address.label_tag }}
+            <label for="{{ form.address.id_for_label }}">Адрес *</label>
             {{ form.address }}
-            <small class="help-text">Start typing and choose a Bulgarian address suggestion.</small>
+            <small class="help-text">Започнете да пишете адрес и изберете предложение от списъка.</small>
             {% if form.address.errors %}{{ form.address.errors }}{% endif %}
         </p>
         {{ form.latitude }}
@@ -46,7 +49,7 @@
 
         {% if form.errors %}
             <div class="form-errors" role="alert">
-                <strong>Please fix the following:</strong>
+                <strong>Моля, поправете следното:</strong>
                 <ul>
                     {% for error in form.non_field_errors %}
                         <li>{{ error }}</li>
@@ -62,10 +65,10 @@
 
         <p id="location-note" class="help-text"></p>
 
-        <button type="submit" class="btn btn--primary btn--block">Create account</button>
+        <button type="submit" class="btn btn--primary btn--block">Създай профил</button>
 
         <p class="form-footer">
-            Already have an account? <a href="{% url 'login' %}">Log in</a>.
+            Имате профил? <a href="{% url 'login' %}">Вход</a>.
         </p>
     </form>
 </section>
@@ -84,7 +87,7 @@
 
     const activateGooglePlaces = () => {
         googleReady = true;
-        note.textContent = "Using Google Maps suggestions.";
+        note.textContent = "Показваме предложения за адрес (Google Maps).";
 
         const autocomplete = new google.maps.places.Autocomplete(addressInput, {
             componentRestrictions: { country: "bg" },
@@ -103,7 +106,7 @@
             addressInput.value = place.formatted_address || addressInput.value;
             latInput.value = Number(place.geometry.location.lat()).toFixed(6);
             lngInput.value = Number(place.geometry.location.lng()).toFixed(6);
-            note.textContent = "Location verified.";
+            note.textContent = "Адресът е запазен.";
         });
 
         addressInput.addEventListener("input", () => {
@@ -117,7 +120,7 @@
             if (!hasAddress) return;
             if (!hasCoords) {
                 e.preventDefault();
-                note.textContent = "Pick an address from Google suggestions so we can save the exact location.";
+                note.textContent = "Моля, изберете адрес от предложенията, за да запазим точната локация.";
             }
         });
     };
@@ -132,7 +135,7 @@
             } catch (e) {
                 // ignore
             }
-            note.textContent = "Google Maps failed to load. Fix your API key restrictions / billing / Places API.";
+            note.textContent = "Google Maps не се зареди. Проверете ключа и настройките (Places API).";
         };
 
         const script = document.createElement("script");
@@ -140,11 +143,11 @@
         script.async = true;
         script.defer = true;
         script.onerror = () => {
-            note.textContent = "Google Maps failed to load. Fix your API key restrictions / billing / Places API.";
+            note.textContent = "Google Maps не се зареди. Проверете ключа и настройките (Places API).";
         };
         document.head.appendChild(script);
     } else {
-        note.textContent = "Missing Google Maps API key.";
+        note.textContent = "Липсва Google Maps API ключ.";
     }
 })();
 </script>

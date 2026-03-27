@@ -1,32 +1,32 @@
 {% extends "base.html" %}
-{% block title %}My Dashboard · HelpNow{% endblock %}
+{% block title %}Табло · HelpNow{% endblock %}
 
 {% block content %}
 <section class="container page-content">
     <header class="page-header">
-        <h1>Welcome back, {{ user.username }}</h1>
-        <p>Your volunteer activity at a glance.</p>
+        <h1>Здравейте, {{ user.username }}</h1>
+        <p>Тук виждате вашите задачи и новите молби за помощ.</p>
     </header>
 
     <section class="info-grid" style="margin-top:1.5rem;">
         <article class="panel">
-            <h2>Quick stats</h2>
+            <h2>Накратко</h2>
             <p style="color:var(--muted);margin-bottom:1.1rem;">
-                Overview of how many people you’ve helped and what’s coming up.
+                Колко задачи имате и какво предстои.
             </p>
             <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0.75rem;">
                 <div style="text-align:center;">
-                    <div style="font-size:0.9rem;color:var(--muted);">Total jobs</div>
+                    <div style="font-size:0.9rem;color:var(--muted);">Общо задачи</div>
                     <div style="font-size:1.6rem;font-weight:800;">{{ total_jobs|default:"0" }}</div>
                 </div>
                 <div style="text-align:center;">
-                    <div style="font-size:0.9rem;color:var(--muted);">Completed</div>
+                    <div style="font-size:0.9rem;color:var(--muted);">Завършени</div>
                     <div style="font-size:1.6rem;font-weight:800;color:#0f5449;">
                         {{ completed_jobs|default:"0" }}
                     </div>
                 </div>
                 <div style="text-align:center;">
-                    <div style="font-size:0.9rem;color:var(--muted);">Upcoming</div>
+                    <div style="font-size:0.9rem;color:var(--muted);">Текущи</div>
                     <div style="font-size:1.6rem;font-weight:800;color:#1a5f6e;">
                         {{ upcoming_jobs|default:"0" }}
                     </div>
@@ -35,13 +35,12 @@
         </article>
 
         <article class="panel">
-            <h2>Your impact</h2>
+            <h2>Вашата помощ</h2>
             <p style="color:var(--muted);margin-bottom:0.9rem;">
-                Thank you for showing up for people who need an extra hand. Every visit,
-                grocery run, and check‑in makes a real difference.
+                Благодарим ви! Всяка помощ е важна — посещение, пазаруване или малка услуга.
             </p>
             <ul style="padding-left:1.1rem;margin:0;color:var(--muted);font-size:0.98rem;">
-                <li><strong>People helped:</strong> {{ unique_needers_helped|default:"0" }}</li>
+                <li><strong>Хора, на които сте помогнали:</strong> {{ unique_needers_helped|default:"0" }}</li>
             </ul>
         </article>
     </section>
@@ -49,10 +48,10 @@
     <section style="margin-top:2rem;">
         <div class="card-head" style="margin-bottom:0.75rem;align-items:flex-end;">
             <div>
-                <h2 style="margin:0;">Your jobs</h2>
-                <p style="margin:0;color:var(--muted);font-size:0.9rem;">Upcoming and active requests you’re helping with.</p>
+                <h2 style="margin:0;">Вашите задачи</h2>
+                <p style="margin:0;color:var(--muted);font-size:0.9rem;">Задачи, по които работите в момента.</p>
             </div>
-            <a class="btn btn--secondary btn--sm" href="{% url 'my_jobs' %}">View all jobs</a>
+            <a class="btn btn--secondary btn--sm" href="{% url 'my_jobs' %}">Виж всички</a>
         </div>
 
         {% if upcoming_applications %}
@@ -63,29 +62,37 @@
                             <h3 style="margin:0;font-size:1.05rem;font-weight:600;">
                                 {{ app.offer.title }}
                             </h3>
-                            <span class="chip chip--{{ app.offer.status }}">
-                                {{ app.offer.get_status_display }}
-                            </span>
+                            {% if app.status == 'pending' %}
+                                <span class="chip chip--waiting">Чака отговор</span>
+                            {% elif app.status == 'accepted' %}
+                                {% if app.offer.status == 'accepted' %}
+                                    <span class="chip chip--waiting">Очаква изпълнение</span>
+                                {% elif app.offer.status == 'completed' %}
+                                    <span class="chip chip--completed">Готово</span>
+                                {% else %}
+                                    <span class="chip chip--accepted">Прието ✅</span>
+                                {% endif %}
+                            {% elif app.status == 'rejected' %}
+                                <span class="chip chip--completed">Не сте избран/а</span>
+                            {% else %}
+                                <span class="chip chip--waiting">{{ app.get_status_display }}</span>
+                            {% endif %}
                         </div>
                         <p class="card-description" style="font-size:0.9rem;margin-bottom:0.6rem;">
                             {{ app.offer.description|truncatechars:120 }}
                         </p>
                         <dl class="meta-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));gap:0.4rem;font-size:0.8rem;">
                             <div>
-                                <dt>Neighbour</dt>
-                                <dd>{{ app.offer.created_by.username }}</dd>
-                            </div>
-                            <div>
-                                <dt>Location</dt>
+                                <dt>Място</dt>
                                 <dd>{{ app.offer.city }}, {{ app.offer.location }}</dd>
                             </div>
                             <div>
-                                <dt>Status</dt>
+                                <dt>Статус</dt>
                                 <dd>{{ app.get_status_display }}</dd>
                             </div>
                             <div>
-                                <dt>Applied on</dt>
-                                <dd>{{ app.created_at|date:"M d, H:i" }}</dd>
+                                <dt>Заявено на</dt>
+                                <dd>{{ app.created_at|date:"d M, H:i" }}</dd>
                             </div>
                         </dl>
                     </article>
@@ -93,10 +100,9 @@
             </div>
         {% else %}
             <div class="empty-state">
-                <h3 style="margin-top:0;">No active jobs yet</h3>
+                <h3 style="margin-top:0;">Нямате текущи задачи</h3>
                 <p style="color:var(--muted);margin-bottom:1rem;">
-                    When you apply for or accept a request, it will show up here so you can
-                    quickly see what’s next.
+                    Когато кандидатствате и ви приемат, задачата ще се появи тук.
                 </p>
             </div>
         {% endif %}
@@ -105,32 +111,32 @@
     <section style="margin-top:2.5rem;">
         <div class="card-head" style="margin-bottom:0.75rem;">
             <div>
-                <h2 style="margin:0;">Requests near you</h2>
-                <p style="margin:0;color:var(--muted);font-size:0.9rem;">Browse people nearby who currently need help.</p>
+                <h2 style="margin:0;">Молби за помощ наблизо</h2>
+                <p style="margin:0;color:var(--muted);font-size:0.9rem;">Вижте хората във вашия район, които търсят помощ.</p>
             </div>
         </div>
 
         <div class="tab-controls" style="display:flex;gap:0.5rem;margin-bottom:0.75rem;">
             <button type="button" class="tab-toggle is-active" data-panel-target="panel-map"
                     style="flex:0 0 auto;padding:0.35rem 0.8rem;border-radius:999px;border:1px solid #cbd5e1;background:#e2f3ff;font-size:0.85rem;font-weight:600;">
-                Map
+                Карта
             </button>
             <button type="button" class="tab-toggle" data-panel-target="panel-list"
                     style="flex:0 0 auto;padding:0.35rem 0.8rem;border-radius:999px;border:1px solid #cbd5e1;background:#f9fafb;font-size:0.85rem;font-weight:600;">
-                List
+                Списък
             </button>
         </div>
 
         <section id="panel-map" class="tab-panel is-active" style="margin-bottom:1.5rem;">
             <article class="panel" style="padding:0.75rem 0.9rem;">
-                <h3 style="margin-top:0;margin-bottom:0.5rem;font-size:1rem;">Map view</h3>
+                <h3 style="margin-top:0;margin-bottom:0.5rem;font-size:1rem;">Карта</h3>
                 <div id="map" style="height:340px; width: 100%; border-radius: 12px; border: 3px solid #ddd;"></div>
             </article>
         </section>
 
         <section id="panel-list" class="tab-panel" style="display:none;">
             <article class="panel" style="padding:0.75rem 0.9rem;">
-                <h3 style="margin-top:0;margin-bottom:0.5rem;font-size:1rem;">List view</h3>
+                <h3 style="margin-top:0;margin-bottom:0.5rem;font-size:1rem;">Списък</h3>
                 <div class="offers-list" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:0.9rem;">
                     {% for offer in offers %}
                     <article class="card offer-card"
@@ -150,7 +156,7 @@
 
                         <dl class="meta-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));gap:0.4rem;font-size:0.78rem;">
                             <div>
-                                <dt>Location</dt>
+                                <dt>Място</dt>
                                 <dd>
                                     {% if user.is_authenticated and user == offer.accepted_by %}
                                         {{ offer.location }}
@@ -158,34 +164,34 @@
                                         {{ offer.city }}
                                     {% endif %}
                                     {% if offer.distance_km is not None %}
-                                        ({{ offer.distance_km }} km away)
+                                        ({{ offer.distance_km }} км)
                                     {% endif %}
                                 </dd>
                             </div>
                             <div>
-                                <dt>Category</dt>
+                                <dt>Категория</dt>
                                 <dd>{{ offer.get_category_display }}</dd>
                             </div>
                             <div>
-                                <dt>Type</dt>
+                                <dt>Вид</dt>
                                 <dd>{{ offer.offer_type|title }}</dd>
                             </div>
                             <div>
-                                <dt>Price</dt>
-                                <dd>{% if offer.price %}EUR {{ offer.price }}{% else %}Volunteer{% endif %}</dd>
+                                <dt>Заплащане</dt>
+                                <dd>{% if offer.price %}{{ offer.price }} EUR{% else %}Доброволно{% endif %}</dd>
                             </div>
                         </dl>
 
-                        <p class="meta-note" style="font-size:0.8rem;">Posted by {{ offer.created_by.username|default:offer.name }}</p>
+                        <p class="meta-note" style="font-size:0.8rem;">Публикувано от {{ offer.created_by.username|default:offer.name }}</p>
                         <p class="distance-label" style="color:#27ae60;font-weight:bold;font-size:0.78rem;"></p>
 
                         {% if user.is_authenticated and user.user_type == 'worker' and offer.status == 'waiting' %}
                             {% if offer.id in already_applied_ids %}
-                                <button class="btn btn--secondary btn--block" disabled style="margin-top:0.4rem;">Applied ✓</button>
+                                <button class="btn btn--secondary btn--block" disabled style="margin-top:0.4rem;">Кандидатствано ✓</button>
                             {% else %}
                                 <form method="post" action="{% url 'apply_offer' offer.id %}" class="inline-action-form" style="margin-top:0.4rem;">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn--primary btn--block">Apply</button>
+                                    <button type="submit" class="btn btn--primary btn--block">Кандидатствай</button>
                                 </form>
                             {% endif %}
                         {% endif %}
@@ -193,14 +199,14 @@
                         {% if user.is_authenticated and offer.status == 'accepted' and offer.accepted_by == user %}
                             <form method="post" action="{% url 'complete_offer' offer.id %}" class="inline-action-form" style="margin-top:0.4rem;">
                                 {% csrf_token %}
-                                <button type="submit" class="btn btn--secondary btn--block">Mark as done</button>
+                                <button type="submit" class="btn btn--secondary btn--block">Отбележи като готово</button>
                             </form>
                         {% endif %}
 
                     </article>
                     {% empty %}
                     <div class="empty-state">
-                        <p>No requests yet.</p>
+                        <p>В момента няма нови молби.</p>
                     </div>
                     {% endfor %}
                 </div>
@@ -269,7 +275,7 @@ document.addEventListener("DOMContentLoaded", () => {
         if (!distLabel) return;
         const backendKm = (card.dataset.distance || '').trim();
         if (backendKm !== '') {
-            distLabel.textContent = `📍 ${backendKm} km away from you`;
+            distLabel.textContent = `📍 ${backendKm} км от вас`;
         }
     });
 
@@ -286,7 +292,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     fillColor: '#3498db',
                     fillOpacity: 0.8,
                     radius: 10
-                }).addTo(map).bindPopup("<b>You are here</b>").openPopup();
+                }).addTo(map).bindPopup("<b>Вие сте тук</b>").openPopup();
                 map.setView([lat, lng], 13);
             }
 
@@ -300,7 +306,7 @@ document.addEventListener("DOMContentLoaded", () => {
                     return;
                 }
                 if (!isNaN(oLat) && !isNaN(oLng) && distLabel) {
-                    distLabel.textContent = `📍 ${getDistance(lat, lng, oLat, oLng)} km away from you`;
+                    distLabel.textContent = `📍 ${getDistance(lat, lng, oLat, oLng)} км от вас`;
                 }
             });
 

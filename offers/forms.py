@@ -11,7 +11,11 @@ class ExtendedUserCreationForm(UserCreationForm):
         model = User
         fields = UserCreationForm.Meta.fields + ('email', 'user_type', 'address', 'latitude', 'longitude')
         widgets = {
-            'address': forms.TextInput(attrs={'id': 'id_address_input', 'autocomplete': 'off'}),
+            'address': forms.TextInput(attrs={
+                'id': 'id_address_input',
+                'autocomplete': 'off',
+                'placeholder': 'Въведете адрес',
+            }),
         }
 
     def _to_decimal_6(self, value):
@@ -28,7 +32,7 @@ class ExtendedUserCreationForm(UserCreationForm):
 
         # Google-only: require coords if address is set
         if address and (lat is None or lng is None):
-            self.add_error('address', 'Pick an address from Google suggestions.')
+            self.add_error('address', 'Моля, изберете адрес от предложенията.')
             return cleaned_data
 
         # Quantize whatever came from frontend (Google) to 6 decimals
@@ -43,7 +47,7 @@ class ExtendedUserCreationForm(UserCreationForm):
         lng = cleaned_data.get('longitude')
         if lat is not None and lng is not None:
             if not (41.2 <= float(lat) <= 44.3 and 22.3 <= float(lng) <= 28.7):
-                self.add_error('address', 'Selected address must be in Bulgaria.')
+                self.add_error('address', 'Моля, изберете адрес в България.')
 
         return cleaned_data
 

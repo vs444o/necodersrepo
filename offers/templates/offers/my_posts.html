@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 
-{% block title %}My Posts – HelpNow{% endblock %}
+{% block title %}Моите публикации · HelpNow{% endblock %}
 
 {% block content %}
 <section class="container page-header">
-    <h1>My Posts</h1>
-    <p>Track your requests and see who has applied.</p>
+    <h1>Моите публикации</h1>
+    <p>Тук виждате молбите си и кой е кандидатствал.</p>
 </section>
 
 <section class="container">
@@ -15,7 +15,7 @@
     {% endfor %}
 
     {% if not offers %}
-        <p>You haven't posted any requests yet. <a href="{% url 'post_offer' %}">Post one now →</a></p>
+        <p>Все още нямате публикувани молби. <a href="{% url 'post_offer' %}">Публикувай сега →</a></p>
     {% endif %}
 
     {% for offer in offers %}
@@ -35,7 +35,7 @@
             {% with apps=offer.applications.all %}
                 {% if apps %}
                     <h3 style="margin-top:1rem;">
-                        Who applied <span style="font-weight:normal;font-size:.9rem;">({{ apps|length }})</span>
+                        Кой е кандидатствал <span style="font-weight:normal;font-size:.9rem;">({{ apps|length }})</span>
                     </h3>
                     <ul style="list-style:none;padding:0;margin:0;">
                         {% for app in apps %}
@@ -45,28 +45,28 @@
                             {% if app.status == 'pending' %}
                                 <form method="post" action="{% url 'accept_application' app.pk %}">
                                     {% csrf_token %}
-                                    <button type="submit" class="btn btn--primary btn--sm">Accept</button>
+                                    <button type="submit" class="btn btn--primary btn--sm">Приеми</button>
                                 </form>
                             {% elif app.status == 'accepted' %}
-                                <span style="color:green;font-weight:600;">✅ Accepted</span>
+                                <span style="color:green;font-weight:600;">✅ Приет/а</span>
                             {% elif app.status == 'rejected' %}
-                                <span style="color:var(--muted,#888);">Rejected</span>
+                                <span style="color:var(--muted,#888);">Отказан/а</span>
                             {% endif %}
                         </li>
                         {% endfor %}
                     </ul>
                 {% else %}
-                    <p style="color:var(--muted,#888);margin-top:.75rem;">No one has applied yet.</p>
+                    <p style="color:var(--muted,#888);margin-top:.75rem;">Все още няма кандидати.</p>
                 {% endif %}
             {% endwith %}
         {% endif %}
 
         {% if offer.status == 'accepted' and offer.accepted_by %}
-            <p style="margin-top:.75rem;">Being handled by <strong>{{ offer.accepted_by.username }}</strong></p>
+            <p style="margin-top:.75rem;">Поема се от <strong>{{ offer.accepted_by.username }}</strong></p>
         {% endif %}
 
         {% if offer.status == 'completed' %}
-            <p style="margin-top:.75rem;color:green;">Completed by <strong>{{ offer.completed_by.username }}</strong> on {{ offer.completed_at|date:"d M Y" }}</p>
+            <p style="margin-top:.75rem;color:green;">Завършено от <strong>{{ offer.completed_by.username }}</strong> на {{ offer.completed_at|date:"d.m.Y" }}</p>
         {% endif %}
     </article>
     {% endfor %}
