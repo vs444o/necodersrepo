@@ -10,6 +10,11 @@ from .models import Offer, Application, Notification
 
 
 def home(request):
+    # Workers now land on the dedicated dashboard instead of the old home view
+    if request.user.is_authenticated and request.user.user_type == 'worker':
+        return redirect('dashboard')
+
+    # Help needers keep using the existing home page
     if request.user.is_authenticated and request.user.user_type == 'needer':
         offers = (
             Offer.objects
@@ -20,61 +25,18 @@ def home(request):
         unread = list(request.user.notifications.filter(read=False))
         request.user.notifications.filter(read=False).update(read=True)
         return render(request, 'offers/home.html', {'offers': offers, 'unread': unread})
-    if request.user.is_authenticated and request.user.user_type == 'worker':
-        applications = Application.objects.filter(worker=request.user)
-        stats = {
-            'applied': applications.filter(status='pending').count(),
-            'accepted': applications.filter(status='accepted').count(),
-            'completed': applications.filter(status='completed').count(),
-        }
-        unread = list(request.user.notifications.filter(read=False))
-        request.user.notifications.filter(read=False).update(read=True)
-        return render(request, 'offers/home.html', {'stats': stats, 'unread': unread})
+
     return render(request, 'offers/home.html')
 
 
 @login_required
 def find(request):
-    offers = list(Offer.objects.select_related('created_by').all())
-    already_applied_ids = set()
-
-    if request.user.user_type == 'worker':
-        already_applied_ids = set(
-            Application.objects.filter(worker=request.user).values_list('offer_id', flat=True)
-        )
-
-    if request.user.user_type == 'worker' and request.user.latitude and request.user.longitude:
-        worker_lat = float(request.user.latitude)
-        worker_lng = float(request.user.longitude)
-
-        def simple_distance(lat1, lon1, lat2, lon2):
-            dlat = (lat2 - lat1) * 111
-            dlon = (lon2 - lon1) * 75
-            return round((dlat**2 + dlon**2) ** 0.5, 1)
-
-        for offer in offers:
-            if offer.latitude and offer.longitude:
-                offer.distance_km = simple_distance(
-                    worker_lat, worker_lng,
-                    float(offer.latitude), float(offer.longitude)
-                )
-            else:
-                offer.distance_km = None
-
-        offers.sort(key=lambda o: (
-            0 if o.status == 'waiting' else 1,
-            o.distance_km if o.distance_km is not None else float('inf'),
-            -o.created_at.timestamp(),
-        ))
-    else:
-        for offer in offers:
-            offer.distance_km = None
-        offers.sort(key=lambda o: o.created_at, reverse=True)
-
-    return render(request, 'offers/find.html', {
-        'offers': offers,
-        'already_applied_ids': already_applied_ids,
-    })
+    """
+    This view used to host the separate 'Find requests' page.
+    The experience now lives on the Dashboard, so we simply
+    forward any old /find/ links there.
+    """
+    return redirect('dashboard')
 
 
 @login_required
@@ -102,6 +64,88 @@ def post_offer(request):
         'categories': Offer.CATEGORY_CHOICES,
     })
 
+
+@login_required
+def dashboard(request):
+    """
+    Worker dashboard: quick stats, upcoming jobs, and nearby requests
+    shown on a map and as a list.
+    """
+    if request.user.user_type != 'worker':
+        return HttpResponseForbidden()
+
+    # Applications for this worker
+    applications = (
+        Application.objects
+        .filter(worker=request.user)
+        .select_related('offer', 'offer__created_by')
+        .order_by('-created_at')
+    )
+
+    # Stats
+    total_jobs = applications.count()
+    completed_jobs = applications.filter(offer__status='completed').count()
+    upcoming_jobs = applications.filter(offer__status__in=['waiting', 'accepted']).count()
+
+    # Very simple reliability / streak metrics for now
+    reliability_score = 100 if total_jobs else 0
+    longest_streak_days = 0
+    unique_needers_helped = (
+        Offer.objects
+        .filter(accepted_by=request.user)
+        .exclude(created_by__isnull=True)
+        .values('created_by')
+        .distinct()
+        .count()
+    )
+
+    upcoming_applications = applications.filter(offer__status__in=['waiting', 'accepted'])
+
+    # Nearby open requests for the map + list
+    offers = list(Offer.objects.select_related('created_by').all())
+    already_applied_ids = set(
+        Application.objects.filter(worker=request.user).values_list('offer_id', flat=True)
+    )
+
+    if request.user.latitude and request.user.longitude:
+        worker_lat = float(request.user.latitude)
+        worker_lng = float(request.user.longitude)
+
+        def simple_distance(lat1, lon1, lat2, lon2):
+            dlat = (lat2 - lat1) * 111
+            dlon = (lat2 - lon1) * 75
+            return round((dlat**2 + dlon**2) ** 0.5, 1)
+
+        for offer in offers:
+            if offer.latitude and offer.longitude:
+                offer.distance_km = simple_distance(
+                    worker_lat, worker_lng,
+                    float(offer.latitude), float(offer.longitude)
+                )
+            else:
+                offer.distance_km = None
+
+        offers.sort(key=lambda o: (
+            0 if o.status == 'waiting' else 1,
+            o.distance_km if o.distance_km is not None else float('inf'),
+            -o.created_at.timestamp(),
+        ))
+    else:
+        for offer in offers:
+            offer.distance_km = None
+        offers.sort(key=lambda o: o.created_at, reverse=True)
+
+    return render(request, 'offers/dashboard.html', {
+        'total_jobs': total_jobs,
+        'completed_jobs': completed_jobs,
+        'upcoming_jobs': upcoming_jobs,
+        'reliability_score': reliability_score,
+        'longest_streak_days': longest_streak_days,
+        'unique_needers_helped': unique_needers_helped,
+        'upcoming_applications': upcoming_applications,
+        'offers': offers,
+        'already_applied_ids': already_applied_ids,
+    })
 
 @login_required
 def apply_offer(request, pk):

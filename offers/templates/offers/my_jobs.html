@@ -5,7 +5,7 @@
 {% block content %}
 <section class="container page-header">
     <h1>My Jobs</h1>
-    <p>Track the requests you've applied to.</p>
+    <p>Track what you’re working on now and what you’ve already completed.</p>
 </section>
 
 <section class="container">
@@ -17,11 +17,16 @@
     {% endfor %}
 
     {% if not applications %}
-        <p>You haven't applied to anything yet. <a href="{% url 'find' %}">Browse requests →</a></p>
+        <p>You haven't applied to anything yet. <a href="{% url 'dashboard' %}">Browse requests on your dashboard →</a></p>
     {% endif %}
 
-    {% for app in applications %}
-    <article class="card" style="margin-bottom:1.5rem;">
+    {% with current=applications|dictsortreversed:"created_at" %}
+    <section style="margin-top:1rem;margin-bottom:2rem;">
+        <h2 style="font-size:1.2rem;margin-bottom:0.75rem;">Current jobs</h2>
+        {% with active_list=applications|dictsortreversed:"created_at" %}
+        {% for app in active_list %}
+            {% if app.offer.status == 'waiting' or app.offer.status == 'accepted' %}
+    <article class="card" style="margin-bottom:1.2rem;">
 
         <div class="card-head">
             <h2>{{ app.offer.title }}</h2>
@@ -59,7 +64,45 @@
         {% endif %}
 
     </article>
-    {% endfor %}
+            {% endif %}
+        {% empty %}
+            <p>No current jobs. Check your <a href="{% url 'dashboard' %}">dashboard</a> for new requests.</p>
+        {% endfor %}
+        {% endwith %}
+    </section>
+
+    <section>
+        <h2 style="font-size:1.2rem;margin-bottom:0.75rem;">Completed jobs (history)</h2>
+        {% with done_list=applications|dictsortreversed:"created_at" %}
+        {% for app in done_list %}
+            {% if app.offer.status == 'completed' %}
+    <article class="card" style="margin-bottom:1.2rem;opacity:0.9;">
+
+        <div class="card-head">
+            <h2>{{ app.offer.title }}</h2>
+            <span class="chip chip--completed">Done</span>
+        </div>
+
+        <p style="color:var(--muted,#888);font-size:.9rem;">
+            {{ app.offer.get_category_display }} · {{ app.offer.location }} · completed {{ app.offer.completed_at|date:"d M Y" }}
+        </p>
+
+        <p>{{ app.offer.description }}</p>
+
+        {% if app.offer.price %}
+            <p style="font-size:.9rem;">💰 EUR {{ app.offer.price }}</p>
+        {% endif %}
+
+        <p style="color:green;margin-top:.75rem;">🎉 Completed on {{ app.offer.completed_at|date:"d M Y" }}</p>
+
+    </article>
+            {% endif %}
+        {% empty %}
+            <p>No completed jobs yet.</p>
+        {% endfor %}
+        {% endwith %}
+    </section>
+    {% endwith %}
 
 </section>
 {% endblock %}

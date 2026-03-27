@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+{% block title %}My Dashboard · HelpNow{% endblock %}
+
+{% block content %}
+<section class="container page-content">
+    <header class="page-header">
+        <h1>Welcome back, {{ user.username }}</h1>
+        <p>Your volunteer activity at a glance.</p>
+    </header>
+
+    <section class="info-grid" style="margin-top:1.5rem;">
+        <article class="panel">
+            <h2>Quick stats</h2>
+            <p style="color:var(--muted);margin-bottom:1.1rem;">
+                Overview of how many people you’ve helped and what’s coming up.
+            </p>
+            <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:0.75rem;">
+                <div style="text-align:center;">
+                    <div style="font-size:0.9rem;color:var(--muted);">Total jobs</div>
+                    <div style="font-size:1.6rem;font-weight:800;">{{ total_jobs|default:"0" }}</div>
+                </div>
+                <div style="text-align:center;">
+                    <div style="font-size:0.9rem;color:var(--muted);">Completed</div>
+                    <div style="font-size:1.6rem;font-weight:800;color:#0f5449;">
+                        {{ completed_jobs|default:"0" }}
+                    </div>
+                </div>
+                <div style="text-align:center;">
+                    <div style="font-size:0.9rem;color:var(--muted);">Upcoming</div>
+                    <div style="font-size:1.6rem;font-weight:800;color:#1a5f6e;">
+                        {{ upcoming_jobs|default:"0" }}
+                    </div>
+                </div>
+            </div>
+        </article>
+
+        <article class="panel">
+            <h2>Your impact</h2>
+            <p style="color:var(--muted);margin-bottom:0.9rem;">
+                Thank you for showing up for people who need an extra hand. Every visit,
+                grocery run, and check‑in makes a real difference.
+            </p>
+            <ul style="padding-left:1.1rem;margin:0;color:var(--muted);font-size:0.98rem;">
+                <li><strong>Reliability score:</strong> {{ reliability_score|default:"—" }}</li>
+                <li><strong>Longest streak:</strong> {{ longest_streak_days|default:"0" }} days helped in a row</li>
+                <li><strong>People helped:</strong> {{ unique_needers_helped|default:"0" }}</li>
+            </ul>
+        </article>
+    </section>
+
+    <section style="margin-top:2rem;">
+        <div class="card-head" style="margin-bottom:0.75rem;align-items:flex-end;">
+            <div>
+                <h2 style="margin:0;">Your jobs</h2>
+                <p style="margin:0;color:var(--muted);font-size:0.9rem;">Upcoming and active requests you’re helping with.</p>
+            </div>
+            <a class="btn btn--secondary btn--sm" href="{% url 'my_jobs' %}">View all jobs</a>
+        </div>
+
+        {% if upcoming_applications %}
+            <div class="card-list" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:1rem;">
+                {% for app in upcoming_applications %}
+                    <article class="card" style="padding:0.9rem 1rem;">
+                        <div class="card-head" style="margin-bottom:0.35rem;">
+                            <h3 style="margin:0;font-size:1.05rem;font-weight:600;">
+                                {{ app.offer.title }}
+                            </h3>
+                            <span class="chip chip--{{ app.offer.status }}">
+                                {{ app.offer.get_status_display }}
+                            </span>
+                        </div>
+                        <p class="card-description" style="font-size:0.9rem;margin-bottom:0.6rem;">
+                            {{ app.offer.description|truncatechars:120 }}
+                        </p>
+                        <dl class="meta-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));gap:0.4rem;font-size:0.8rem;">
+                            <div>
+                                <dt>Neighbour</dt>
+                                <dd>{{ app.offer.created_by.username }}</dd>
+                            </div>
+                            <div>
+                                <dt>Location</dt>
+                                <dd>{{ app.offer.city }}, {{ app.offer.location }}</dd>
+                            </div>
+                            <div>
+                                <dt>Status</dt>
+                                <dd>{{ app.get_status_display }}</dd>
+                            </div>
+                            <div>
+                                <dt>Applied on</dt>
+                                <dd>{{ app.created_at|date:"M d, H:i" }}</dd>
+                            </div>
+                        </dl>
+                    </article>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="empty-state">
+                <h3 style="margin-top:0;">No active jobs yet</h3>
+                <p style="color:var(--muted);margin-bottom:1rem;">
+                    When you apply for or accept a request, it will show up here so you can
+                    quickly see what’s next.
+                </p>
+            </div>
+        {% endif %}
+    </section>
+
+    <section style="margin-top:2.5rem;">
+        <div class="card-head" style="margin-bottom:0.75rem;">
+            <div>
+                <h2 style="margin:0;">Requests near you</h2>
+                <p style="margin:0;color:var(--muted);font-size:0.9rem;">Browse people nearby who currently need help.</p>
+            </div>
+        </div>
+
+        <div class="tab-controls" style="display:flex;gap:0.5rem;margin-bottom:0.75rem;">
+            <button type="button" class="tab-toggle is-active" data-panel-target="panel-map"
+                    style="flex:0 0 auto;padding:0.35rem 0.8rem;border-radius:999px;border:1px solid #cbd5e1;background:#e2f3ff;font-size:0.85rem;font-weight:600;">
+                Map
+            </button>
+            <button type="button" class="tab-toggle" data-panel-target="panel-list"
+                    style="flex:0 0 auto;padding:0.35rem 0.8rem;border-radius:999px;border:1px solid #cbd5e1;background:#f9fafb;font-size:0.85rem;font-weight:600;">
+                List
+            </button>
+        </div>
+
+        <section id="panel-map" class="tab-panel is-active" style="margin-bottom:1.5rem;">
+            <article class="panel" style="padding:0.75rem 0.9rem;">
+                <h3 style="margin-top:0;margin-bottom:0.5rem;font-size:1rem;">Map view</h3>
+                <div id="map" style="height:340px; width: 100%; border-radius: 12px; border: 3px solid #ddd;"></div>
+            </article>
+        </section>
+
+        <section id="panel-list" class="tab-panel" style="display:none;">
+            <article class="panel" style="padding:0.75rem 0.9rem;">
+                <h3 style="margin-top:0;margin-bottom:0.5rem;font-size:1rem;">List view</h3>
+                <div class="offers-list" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:0.9rem;">
+                    {% for offer in offers %}
+                    <article class="card offer-card"
+                             data-lat="{{ offer.latitude }}"
+                             data-lng="{{ offer.longitude }}"
+                             data-title="{{ offer.title }}">
+
+                        <div class="card-head" style="margin-bottom:0.35rem;">
+                            <h3 style="font-size:1.02rem;margin:0;">{{ offer.title }}</h3>
+                            <span class="chip chip--{{ offer.status }}">{{ offer.get_status_display }}</span>
+                        </div>
+
+                        <p class="card-description" style="font-size:0.9rem;margin-bottom:0.6rem;">
+                            {{ offer.description|truncatechars:140 }}
+                        </p>
+
+                        <dl class="meta-grid" style="grid-template-columns:repeat(2,minmax(0,1fr));gap:0.4rem;font-size:0.78rem;">
+                            <div>
+                                <dt>Location</dt>
+                                <dd>
+                                    {% if user.is_authenticated and user == offer.accepted_by %}
+                                        {{ offer.location }}
+                                    {% else %}
+                                        {{ offer.city }}
+                                    {% endif %}
+                                    {% if offer.distance_km is not None %}
+                                        ({{ offer.distance_km }} km away)
+                                    {% endif %}
+                                </dd>
+                            </div>
+                            <div>
+                                <dt>Category</dt>
+                                <dd>{{ offer.get_category_display }}</dd>
+                            </div>
+                            <div>
+                                <dt>Type</dt>
+                                <dd>{{ offer.offer_type|title }}</dd>
+                            </div>
+                            <div>
+                                <dt>Price</dt>
+                                <dd>{% if offer.price %}EUR {{ offer.price }}{% else %}Volunteer{% endif %}</dd>
+                            </div>
+                        </dl>
+
+                        <p class="meta-note" style="font-size:0.8rem;">Posted by {{ offer.created_by.username|default:offer.name }}</p>
+                        <p class="distance-label" style="color:#27ae60;font-weight:bold;font-size:0.78rem;"></p>
+
+                        {% if user.is_authenticated and user.user_type == 'worker' and offer.status == 'waiting' %}
+                            {% if offer.id in already_applied_ids %}
+                                <button class="btn btn--secondary btn--block" disabled style="margin-top:0.4rem;">Applied ✓</button>
+                            {% else %}
+                                <form method="post" action="{% url 'apply_offer' offer.id %}" class="inline-action-form" style="margin-top:0.4rem;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn--primary btn--block">Apply</button>
+                                </form>
+                            {% endif %}
+                        {% endif %}
+
+                        {% if user.is_authenticated and offer.status == 'accepted' and offer.accepted_by == user %}
+                            <form method="post" action="{% url 'complete_offer' offer.id %}" class="inline-action-form" style="margin-top:0.4rem;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn--secondary btn--block">Mark as done</button>
+                            </form>
+                        {% endif %}
+
+                    </article>
+                    {% empty %}
+                    <div class="empty-state">
+                        <p>No requests yet.</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </article>
+        </section>
+    </section>
+</section>
+
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    // Tab-like toggles for map vs list
+    const tabToggles = document.querySelectorAll('.tab-toggle');
+    const panels = document.querySelectorAll('.tab-panel');
+
+    tabToggles.forEach(btn => {
+        btn.addEventListener('click', () => {
+            const targetId = btn.dataset.panelTarget;
+
+            tabToggles.forEach(b => b.classList.remove('is-active'));
+            panels.forEach(p => p.style.display = 'none');
+
+            btn.classList.add('is-active');
+            const panel = document.getElementById(targetId);
+            if (panel) panel.style.display = 'block';
+        });
+    });
+
+    // Map + markers
+    const mapElement = document.getElementById('map');
+    if (!mapElement) return;
+
+    const map = L.map('map').setView([42.6977, 23.3219], 7);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors'
+    }).addTo(map);
+
+    const offerCards = document.querySelectorAll('.offer-card');
+    let workerMarker = null;
+
+    function getDistance(lat1, lon1, lat2, lon2) {
+        const dlat = (lat2 - lat1) * 111;
+        const dlon = (lon2 - lon1) * 75;
+        return Math.sqrt(dlat * dlat + dlon * dlon).toFixed(2);
+    }
+
+    offerCards.forEach(card => {
+        const lat = parseFloat(card.dataset.lat);
+        const lng = parseFloat(card.dataset.lng);
+        const title = card.dataset.title;
+        if (!isNaN(lat) && !isNaN(lng)) {
+            L.marker([lat, lng])
+                .addTo(map)
+                .bindPopup(`<b>Help Needed:</b><br>${title}`);
+        }
+    });
+
+    if ("geolocation" in navigator) {
+        navigator.geolocation.watchPosition((position) => {
+            const lat = position.coords.latitude;
+            const lng = position.coords.longitude;
+
+            if (workerMarker) {
+                workerMarker.setLatLng([lat, lng]);
+            } else {
+                workerMarker = L.circleMarker([lat, lng], {
+                    color: '#3498db',
+                    fillColor: '#3498db',
+                    fillOpacity: 0.8,
+                    radius: 10
+                }).addTo(map).bindPopup("<b>You are here</b>").openPopup();
+                map.setView([lat, lng], 13);
+            }
+
+            offerCards.forEach(card => {
+                const oLat = parseFloat(card.dataset.lat);
+                const oLng = parseFloat(card.dataset.lng);
+                const distLabel = card.querySelector('.distance-label');
+                if (!isNaN(oLat) && !isNaN(oLng) && distLabel) {
+                    distLabel.textContent = `📍 ${getDistance(lat, lng, oLat, oLng)} km away from you`;
+                }
+            });
+
+        }, (err) => console.error(err), { enableHighAccuracy: true });
+    }
+});
+</script>
+{% endblock %}

@@ -33,4 +33,5 @@ urlpatterns = [
     path('my-posts/', views.my_posts, name='my_posts'),
     path('application/<int:pk>/accept/', views.accept_application, name='accept_application'),
     path('my-jobs/', views.my_jobs, name='my_jobs'),
+    path('dashboard/', views.dashboard, name='dashboard'),
 ]
