@@ -41,8 +41,6 @@
                 grocery run, and check‑in makes a real difference.
             </p>
             <ul style="padding-left:1.1rem;margin:0;color:var(--muted);font-size:0.98rem;">
-                <li><strong>Reliability score:</strong> {{ reliability_score|default:"—" }}</li>
-                <li><strong>Longest streak:</strong> {{ longest_streak_days|default:"0" }} days helped in a row</li>
                 <li><strong>People helped:</strong> {{ unique_needers_helped|default:"0" }}</li>
             </ul>
         </article>
@@ -138,6 +136,7 @@
                     <article class="card offer-card"
                              data-lat="{{ offer.latitude }}"
                              data-lng="{{ offer.longitude }}"
+                             data-distance="{{ offer.distance_km|default_if_none:'' }}"
                              data-title="{{ offer.title }}">
 
                         <div class="card-head" style="margin-bottom:0.35rem;">
@@ -246,7 +245,8 @@ document.addEventListener("DOMContentLoaded", () => {
     function getDistance(lat1, lon1, lat2, lon2) {
         const dlat = (lat2 - lat1) * 111;
         const dlon = (lon2 - lon1) * 75;
-        return Math.sqrt(dlat * dlat + dlon * dlon).toFixed(2);
+        // Match backend rounding (1 decimal) so the numbers agree.
+        return Math.sqrt(dlat * dlat + dlon * dlon).toFixed(1);
     }
 
     offerCards.forEach(card => {
@@ -257,6 +257,17 @@ document.addEventListener("DOMContentLoaded", () => {
             L.marker([lat, lng])
                 .addTo(map)
                 .bindPopup(`<b>Help Needed:</b><br>${title}`);
+        }
+    });
+
+    // Prefer backend-computed distance so it matches the "(X km away)" value.
+    // If the backend distance isn't available, we'll fill it using live geolocation.
+    offerCards.forEach(card => {
+        const distLabel = card.querySelector('.distance-label');
+        if (!distLabel) return;
+        const backendKm = (card.dataset.distance || '').trim();
+        if (backendKm !== '') {
+            distLabel.textContent = `📍 ${backendKm} km away from you`;
         }
     });
 
@@ -282,10 +293,21 @@ document.addEventListener("DOMContentLoaded", () => {
                 const oLng = parseFloat(card.dataset.lng);
                 const distLabel = card.querySelector('.distance-label');
                 const distInline = card.querySelector('.distance-inline');
+
+                const backendKm = (card.dataset.distance || '').trim();
+                if (backendKm !== '') {
+                    // Keep backend-computed distance so it matches the list label
+                    if (distInline) {
+                        distInline.textContent = ` (${backendKm} km away)`;
+                    }
+                    return;
+                }
+
                 const computedKm = (!isNaN(oLat) && !isNaN(oLng))
                     ? getDistance(lat, lng, oLat, oLng)
                     : null;
-                if (!isNaN(oLat) && !isNaN(oLng) && distLabel) {
+
+                if (!isNaN(oLat) && !isNaN(oLng) && distLabel && computedKm !== null) {
                     distLabel.textContent = `📍 ${computedKm} km away from you`;
                 }
                 if (distInline) {

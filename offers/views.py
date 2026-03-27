@@ -95,9 +95,7 @@ def dashboard(request):
     completed_jobs = applications.filter(offer__status='completed').count()
     upcoming_jobs = applications.filter(offer__status__in=['waiting', 'accepted']).count()
 
-    # Very simple reliability / streak metrics for now
-    reliability_score = 100 if total_jobs else 0
-    longest_streak_days = 0
+    # Very simple streak metric for now
     unique_needers_helped = (
         Offer.objects
         .filter(accepted_by=request.user)
@@ -121,7 +119,7 @@ def dashboard(request):
 
         def simple_distance(lat1, lon1, lat2, lon2):
             dlat = (lat2 - lat1) * 111
-            dlon = (lat2 - lon1) * 75
+            dlon = (lon2 - lon1) * 75
             return round((dlat**2 + dlon**2) ** 0.5, 1)
 
         for offer in offers:
@@ -147,8 +145,6 @@ def dashboard(request):
         'total_jobs': total_jobs,
         'completed_jobs': completed_jobs,
         'upcoming_jobs': upcoming_jobs,
-        'reliability_score': reliability_score,
-        'longest_streak_days': longest_streak_days,
         'unique_needers_helped': unique_needers_helped,
         'upcoming_applications': upcoming_applications,
         'offers': offers,
