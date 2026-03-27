@@ -158,9 +158,7 @@
                                     {% else %}
                                         {{ offer.city }}
                                     {% endif %}
-                                    {% if offer.distance_km is not None %}
-                                        ({{ offer.distance_km }} km away)
-                                    {% endif %}
+                                    <span class="distance-inline"></span>
                                 </dd>
                             </div>
                             <div>
@@ -283,8 +281,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 const oLat = parseFloat(card.dataset.lat);
                 const oLng = parseFloat(card.dataset.lng);
                 const distLabel = card.querySelector('.distance-label');
+                const distInline = card.querySelector('.distance-inline');
+                const computedKm = (!isNaN(oLat) && !isNaN(oLng))
+                    ? getDistance(lat, lng, oLat, oLng)
+                    : null;
                 if (!isNaN(oLat) && !isNaN(oLng) && distLabel) {
-                    distLabel.textContent = `📍 ${getDistance(lat, lng, oLat, oLng)} km away from you`;
+                    distLabel.textContent = `📍 ${computedKm} km away from you`;
+                }
+                if (distInline) {
+                    distInline.textContent = computedKm ? ` (${computedKm} km away)` : '';
                 }
             });
 
