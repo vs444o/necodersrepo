@@ -74,9 +74,18 @@ a {
 .brand-link {
     text-decoration: none;
     color: var(--text);
-    font-size: 1.72rem;
+    font-size: 2.5rem;
     font-weight: 800;
     letter-spacing: -0.02em;
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.brand-logo {
+    width: 2.2rem;
+    height: 2.2rem;
+    vertical-align: middle;
 }
 
 .nav-actions {

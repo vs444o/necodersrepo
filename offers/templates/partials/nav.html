@@ -1,6 +1,10 @@
+{% load static %}
 <nav class="top-nav" aria-label="Main navigation">
     <div class="container nav-wrap">
-        <a class="brand-link" href="{% url 'home' %}">HelpNow</a>
+        <a class="brand-link" href="{% url 'home' %}">
+            <img src="{% static 'logo.svg' %}" alt="HelpNow logo" class="brand-logo">
+            HelpNow
+        </a>
         <div class="nav-actions">
             <a class="nav-link" href="{% url 'home' %}">Home</a>
 
