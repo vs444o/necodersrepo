@@ -74,6 +74,7 @@ def find(request):
     return render(request, 'offers/find.html', {
         'offers': offers,
         'already_applied_ids': already_applied_ids,
+        'google_maps_api_key': settings.GOOGLE_MAPS_API_KEY,
     })
 
 
@@ -82,6 +83,13 @@ def post_offer(request):
     if request.method == 'POST':
         lat = request.POST.get('latitude')
         lng = request.POST.get('longitude')
+        location = (request.POST.get('location') or '').strip()
+        if location and (not lat or not lng):
+            return render(request, 'offers/post_offer.html', {
+                'categories': Offer.CATEGORY_CHOICES,
+                'google_maps_api_key': settings.GOOGLE_MAPS_API_KEY,
+                'error': 'Pick an address from Google suggestions so we can save the exact location.',
+            })
         Offer.objects.create(
             name=request.user.username,
             created_by=request.user,
@@ -90,7 +98,7 @@ def post_offer(request):
             category=request.POST['category'],
             offer_type=request.POST['offer_type'],
             price=request.POST.get('price') or None,
-            location=request.POST['location'],
+            location=location,
             city=request.POST.get('city'),
             # Rounding to 6 decimals for database constraints
             latitude=round(float(lat), 6) if lat else None,
@@ -100,6 +108,7 @@ def post_offer(request):
         return redirect('home')
     return render(request, 'offers/post_offer.html', {
         'categories': Offer.CATEGORY_CHOICES,
+        'google_maps_api_key': settings.GOOGLE_MAPS_API_KEY,
     })
 
 
