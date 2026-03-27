@@ -18,7 +18,7 @@ def home(request):
         offers = (
             Offer.objects
             .filter(created_by=request.user)
-            .prefetch_related('applications__worker')
+            .prefetch_related('applications__worker', 'applications__worker__worker_profile')
             .order_by('-created_at')
         )
         rated_offer_ids = set(
@@ -215,7 +215,12 @@ def complete_offer(request, pk):
 def my_posts(request):
     if request.user.user_type != 'needer':
         return HttpResponseForbidden()
-    offers = Offer.objects.filter(created_by=request.user).order_by('-created_at')
+    offers = (
+        Offer.objects
+        .filter(created_by=request.user)
+        .prefetch_related('applications__worker', 'applications__worker__worker_profile')
+        .order_by('-created_at')
+    )
     rated_offer_ids = set(Rating.objects.filter(needer=request.user).values_list('offer_id', flat=True))
     return render(request, 'offers/my_posts.html', {
         'offers': offers,

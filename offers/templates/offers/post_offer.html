@@ -37,6 +37,34 @@
         70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255, 71, 87, 0); }
         100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); }
     }
+    .elderly-select-label {
+        font-size: 1.05rem;
+        font-weight: 800;
+        color: #1e3d36;
+    }
+    .elderly-select {
+        width: 100%;
+        min-height: 56px;
+        margin-top: 6px;
+        border: 2px solid #33a18f;
+        border-radius: 14px;
+        background: #f1faf8;
+        color: #123a32;
+        font-size: 1.18rem;
+        font-weight: 800;
+        padding: 0.75rem 0.95rem;
+        line-height: 1.35;
+    }
+    .elderly-select:focus {
+        outline: 3px solid #9ed8cd;
+        outline-offset: 2px;
+    }
+    .elderly-help {
+        margin-top: 6px;
+        font-size: 0.95rem;
+        color: #44655f;
+        font-weight: 600;
+    }
 </style>
 
 <section class="container page-header">
@@ -65,17 +93,18 @@
         </div>
 
         <div class="form-group">
-            <label for="category">Категория</label>
-            <select id="category" name="category">
+            <label for="category" class="elderly-select-label">Категория</label>
+            <select id="category" name="category" class="elderly-select">
                 {% for val, label in categories %}
                     <option value="{{ val }}">{{ label }}</option>
                 {% endfor %}
             </select>
+            <p class="elderly-help">Изберете категория от голямото меню.</p>
         </div>
 
         <div class="form-group">
-            <label for="offer_type">Платена или доброволна помощ?</label>
-            <select id="offer_type" name="offer_type">
+            <label for="offer_type" class="elderly-select-label">Платена или доброволна помощ?</label>
+            <select id="offer_type" name="offer_type" class="elderly-select">
                 <option value="paid">Платена</option>
                 <option value="volunteer">Доброволна</option>
             </select>

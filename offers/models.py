@@ -92,6 +92,17 @@ class User(AbstractUser):
         return self.username
 
     @property
+    def worker_phone(self):
+        """
+        Safe access to worker phone for templates.
+        Returns empty string when no worker profile exists yet.
+        """
+        try:
+            return self.worker_profile.phone or ''
+        except WorkerProfile.DoesNotExist:
+            return ''
+
+    @property
     def average_rating(self):
         """
         Average overall score from all completed jobs this worker has been rated for.

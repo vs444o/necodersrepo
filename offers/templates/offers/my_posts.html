@@ -3,6 +3,17 @@
 {% block title %}Моите публикации · HelpNow{% endblock %}
 
 {% block content %}
+<style>
+    .elderly-meta-text {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #1d3d36;
+        font-size: 1rem;
+        font-weight: 800;
+        line-height: 1.25;
+    }
+</style>
 <section class="container page-header">
     <h1>Моите публикации</h1>
     <p>Тук виждате молбите си и кой е кандидатствал.</p>
@@ -41,7 +52,8 @@
                         {% for app in apps %}
                         <li style="display:flex;align-items:center;gap:1rem;padding:.6rem 0;border-bottom:1px solid var(--border,#eee);">
                             <span style="flex:1;font-weight:600;">{{ app.worker.username }}</span>
-                            <span style="color:var(--muted,#888);font-size:.85rem;">{{ app.created_at|date:"d M, H:i" }}</span>
+                            <span class="elderly-meta-text">{{ app.created_at|date:"d M, H:i" }}</span>
+                            <span class="elderly-meta-text">📞 {% if app.worker.worker_phone %}{{ app.worker.worker_phone }}{% else %}няма телефон{% endif %}</span>
                             {% if app.status == 'pending' %}
                                 <form method="post" action="{% url 'accept_application' app.pk %}">
                                     {% csrf_token %}

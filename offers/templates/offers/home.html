@@ -2,6 +2,88 @@
 {% block title %}HelpNow{% endblock %}
 
 {% block content %}
+<style>
+    .elderly-meta-line {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 6px;
+    }
+    .elderly-meta-text {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: #1d3d36;
+        font-size: 1rem;
+        font-weight: 800;
+        line-height: 1.25;
+    }
+    .elderly-rating-card {
+        margin-top: 12px;
+        padding: 16px;
+        border-radius: 12px;
+        background: #f8fbfa;
+        border: 1px solid #d7e8e2;
+    }
+    .elderly-rating-title {
+        margin: 0 0 10px 0;
+        font-size: 1.15rem;
+        font-weight: 800;
+        color: #173f36;
+    }
+    .elderly-rating-row {
+        margin-bottom: 14px;
+    }
+    .elderly-rating-row:last-child {
+        margin-bottom: 0;
+    }
+    .elderly-rating-label {
+        display: block;
+        margin-bottom: 6px;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #264b42;
+    }
+    .elderly-rating-scale {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+    }
+    .elderly-rating-pill input {
+        position: absolute;
+        opacity: 0;
+        pointer-events: none;
+    }
+    .elderly-rating-pill span {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 56px;
+        min-height: 44px;
+        padding: 8px 10px;
+        border-radius: 10px;
+        border: 2px solid #f0c94d;
+        background: #fff9de;
+        color: #9c7200;
+        font-size: 1.05rem;
+        font-weight: 800;
+        cursor: pointer;
+        user-select: none;
+    }
+    .elderly-rating-pill input:checked + span {
+        background: #f2c230;
+        color: #fff;
+        border-color: #f2c230;
+    }
+    .elderly-rate-submit {
+        margin-top: 8px;
+        min-height: 48px;
+        font-size: 1.05rem;
+        font-weight: 800;
+        padding-left: 18px;
+        padding-right: 18px;
+    }
+</style>
 <section class="container">
     {% if user.is_authenticated and user.user_type == "needer" %}
         <h1 style="margin-top: 20px;">Моите публикувани молби</h1>
@@ -37,7 +119,10 @@
                     <div style="display:flex;justify-content:space-between;align-items:center;padding:12px 0;border-bottom:1px solid #f0f0f0;">
                         <div>
                             <span style="font-weight:600;color:#2c3e50;">{{ app.worker.username }}</span>
-                            <span style="color:#888;font-size:0.9em;margin-left:8px;">Кандидатствал/а на {{ app.created_at|date:"d M" }}</span>
+                            <div class="elderly-meta-line">
+                                <span class="elderly-meta-text">Кандидатствал/а на {{ app.created_at|date:"d M" }}</span>
+                                <span class="elderly-meta-text">📞 {% if app.worker.worker_phone %}{{ app.worker.worker_phone }}{% else %}няма телефон{% endif %}</span>
+                            </div>
                             <div style="color:#f39c12;font-size:0.9em;margin-top:4px;">
                                 {% if app.worker.average_rating %}
                                     ⭐ {{ app.worker.average_rating|floatformat:1 }}/5 overall
@@ -53,7 +138,9 @@
                                 <button type="submit" class="btn btn--primary btn--sm">Избери доброволец</button>
                             </form>
                         {% elif app.status == 'accepted' %}
-                            <span style="color:#27ae60;font-weight:700;">✓ Избран доброволец</span>
+                            <span style="color:#27ae60;font-weight:700;">
+                                ✓ Избран доброволец{% if app.worker.worker_phone %} · 📞 {{ app.worker.worker_phone }}{% else %} · 📞 няма телефон{% endif %}
+                            </span>
                         {% endif %}
                     </div>
                     {% empty %}
@@ -66,37 +153,48 @@
                         Thank you for rating {{ offer.accepted_by.username }} for this job.
                     </p>
                 {% elif offer.status == 'completed' and offer.accepted_by and offer.id not in rated_offer_ids %}
-                    <div style="margin-top:12px;padding:12px;border-radius:10px;background:#f8f9fa;border:1px solid #e0e0e0;">
+                    <div class="elderly-rating-card">
                         <form method="post" action="{% url 'rate_offer' offer.id %}">
                             {% csrf_token %}
-                            <p style="margin-top:0;margin-bottom:8px;font-weight:600;">Rate your helper {{ offer.accepted_by.username }} (1–5)</p>
-                            <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:0.9em;">
-                                <label>
-                                    Performance:
-                                    <select name="performance">
-                                        {% for i in "12345" %}
-                                            <option value="{{ forloop.counter }}">{{ forloop.counter }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </label>
-                                <label>
-                                    Behaviour:
-                                    <select name="behaviour">
-                                        {% for i in "12345" %}
-                                            <option value="{{ forloop.counter }}">{{ forloop.counter }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </label>
-                                <label>
-                                    Speed:
-                                    <select name="speed">
-                                        {% for i in "12345" %}
-                                            <option value="{{ forloop.counter }}">{{ forloop.counter }}</option>
-                                        {% endfor %}
-                                    </select>
-                                </label>
+                            <p class="elderly-rating-title">Оценете помощника {{ offer.accepted_by.username }} (1–5)</p>
+
+                            <div class="elderly-rating-row">
+                                <label class="elderly-rating-label">Качество на работата</label>
+                                <div class="elderly-rating-scale">
+                                    {% for i in "12345" %}
+                                        <label class="elderly-rating-pill">
+                                            <input type="radio" name="performance" value="{{ forloop.counter }}" {% if forloop.counter == 5 %}checked{% endif %}>
+                                            <span>{{ forloop.counter }}★</span>
+                                        </label>
+                                    {% endfor %}
+                                </div>
                             </div>
-                            <button type="submit" class="btn btn--primary btn--sm" style="margin-top:10px;">Напишете оценка</button>
+
+                            <div class="elderly-rating-row">
+                                <label class="elderly-rating-label">Отношение</label>
+                                <div class="elderly-rating-scale">
+                                    {% for i in "12345" %}
+                                        <label class="elderly-rating-pill">
+                                            <input type="radio" name="behaviour" value="{{ forloop.counter }}" {% if forloop.counter == 5 %}checked{% endif %}>
+                                            <span>{{ forloop.counter }}★</span>
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <div class="elderly-rating-row">
+                                <label class="elderly-rating-label">Бързина</label>
+                                <div class="elderly-rating-scale">
+                                    {% for i in "12345" %}
+                                        <label class="elderly-rating-pill">
+                                            <input type="radio" name="speed" value="{{ forloop.counter }}" {% if forloop.counter == 5 %}checked{% endif %}>
+                                            <span>{{ forloop.counter }}★</span>
+                                        </label>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <button type="submit" class="btn btn--primary elderly-rate-submit">Изпратете оценката</button>
                         </form>
                     </div>
                 {% endif %}
