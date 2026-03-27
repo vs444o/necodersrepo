@@ -9,9 +9,8 @@ import math
 from .forms import ExtendedUserCreationForm
 from .models import Offer, Application, Notification
 
-@login_required
 def home(request):
-    if request.user.user_type == 'needer':
+    if request.user.is_authenticated and request.user.user_type == 'needer':
         offers = (
             Offer.objects
             .filter(created_by=request.user)
