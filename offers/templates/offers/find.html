@@ -50,7 +50,7 @@
             </dl>
 
             <p class="meta-note">Posted by {{ offer.created_by.username|default:offer.name }}</p>
-            <p class="distance-label" style="color: #27ae60; font-weight: bold;"></p>
+            <p class="distance-label" style="color:#27ae60;font-weight:bold;"></p>
 
             {% if user.is_authenticated and user.user_type == 'worker' and offer.status == 'waiting' %}
                 {% if offer.id in already_applied_ids %}
@@ -94,16 +94,11 @@ document.addEventListener("DOMContentLoaded", () => {
     let workerMarker = null;
 
     function getDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371;
-        const dLat = (lat2 - lat1) * Math.PI / 180;
-        const dLon = (lon2 - lon1) * Math.PI / 180;
-        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
-                  Math.sin(dLon/2) * Math.sin(dLon/2);
-        return (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))).toFixed(2);
+        const dlat = (lat2 - lat1) * 111;
+        const dlon = (lon2 - lon1) * 75;
+        return Math.sqrt(dlat * dlat + dlon * dlon).toFixed(2);
     }
 
-    // Plot offer markers on map
     offerCards.forEach(card => {
         const lat = parseFloat(card.dataset.lat);
         const lng = parseFloat(card.dataset.lng);
@@ -115,7 +110,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
     });
 
-    // Track worker's live location
     if ("geolocation" in navigator) {
         navigator.geolocation.watchPosition((position) => {
             const lat = position.coords.latitude;
@@ -133,7 +127,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 map.setView([lat, lng], 13);
             }
 
-            // Update distance labels on cards
             offerCards.forEach(card => {
                 const oLat = parseFloat(card.dataset.lat);
                 const oLng = parseFloat(card.dataset.lng);
