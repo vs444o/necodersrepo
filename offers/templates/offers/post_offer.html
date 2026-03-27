@@ -3,9 +3,53 @@
 {% block title %}Post a Request - HelpNow{% endblock %}
 
 {% block content %}
+<style>
+    .voice-group {
+        position: relative;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .btn-mic {
+        background: #f8f9fa;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        padding: 10px 14px;
+        cursor: pointer;
+        font-size: 1.2rem;
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .btn-mic:hover {
+        background: #e9ecef;
+    }
+    /* Visual feedback when the AI is listening */
+    .btn-mic.listening {
+        background: #ff4757;
+        color: white;
+        border-color: #ff4757;
+        animation: pulse-red 1.5s infinite;
+    }
+    @keyframes pulse-red {
+        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7); }
+        70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255, 71, 87, 0); }
+        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); }
+    }
+    /* Your original address suggestions styling */
+    .address-suggestions {
+        list-style: none; padding: 0; margin: 0; border: 1px solid #ccc; 
+        background: #fff; position: absolute; width: 100%; z-index: 100;
+        border-radius: 0 0 8px 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .address-suggestion-item { padding: 10px; cursor: pointer; border-bottom: 1px solid #eee; font-size: 0.9rem; }
+    .address-suggestion-item:hover { background: #f1f3f5; }
+</style>
+
 <section class="container page-header">
     <h1>Post a request</h1>
-    <p>Fill in the details clearly so helpers can respond quickly.</p>
+    <p>Fill in the details clearly or <strong>tap the microphone 🎤</strong> to speak your request.</p>
 </section>
 
 <section class="container form-shell">
@@ -14,12 +58,18 @@
 
         <div class="form-group">
             <label for="title">What do you need?</label>
-            <input id="title" type="text" name="title" required>
+            <div class="voice-group">
+                <input id="title" type="text" name="title" required placeholder="Type or speak your need...">
+                <button type="button" class="btn-mic" onclick="runVoiceAI('title', event)" title="Speak Title">🎤</button>
+            </div>
         </div>
 
         <div class="form-group">
             <label for="description">More details</label>
-            <textarea id="description" name="description" rows="4" required></textarea>
+            <div class="voice-group">
+                <textarea id="description" name="description" rows="4" required placeholder="Describe it in detail..."></textarea>
+                <button type="button" class="btn-mic" onclick="runVoiceAI('description', event)" title="Speak Description">🎤</button>
+            </div>
         </div>
 
         <div class="form-group">
@@ -44,26 +94,15 @@
             <input id="price" type="number" name="price" step="0.01">
             <p class="help-text">Use this only when offer type is paid.</p>
         </div>
+
         <div class="form-group">
             <label for="city-input">City</label>
-            <input
-                id="city-input"
-                type="text"
-                name="city"
-                required
-                placeholder="Enter your city (e.g. Gabrovo)"
-            >
+            <input id="city-input" type="text" name="city" required placeholder="e.g. Sofia, Gabrovo, Varna">
         </div>
+
         <div class="form-group">
             <label for="location-input">Location</label>
-            <input
-                id="location-input"
-                type="text"
-                name="location"
-                autocomplete="off"
-                required
-                value="{{ user.address }}"
-            >
+            <input id="location-input" type="text" name="location" autocomplete="off" required value="{{ user.address }}">
             <input type="hidden" name="latitude" id="offer-latitude" value="{{ user.latitude }}">
             <input type="hidden" name="longitude" id="offer-longitude" value="{{ user.longitude }}">
             <small class="help-text">Start typing to search, or use your saved address.</small>
@@ -75,6 +114,51 @@
 </section>
 
 <script>
+/**
+ * VOICE AI SYSTEM
+ * Integrated into your form fields
+ */
+function runVoiceAI(targetId, event) {
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+        alert("Voice recognition is not supported in this browser. Please try Chrome.");
+        return;
+    }
+
+    const recognition = new SpeechRecognition();
+    const btn = event.currentTarget;
+    const targetInput = document.getElementById(targetId);
+
+    // Using 'bg-BG' for Bulgarian speech recognition
+    recognition.lang = 'bg-BG'; 
+    recognition.interimResults = false;
+
+    recognition.onstart = () => btn.classList.add('listening');
+    recognition.onend = () => btn.classList.remove('listening');
+    
+    recognition.onresult = (event) => {
+        const transcript = event.results[0][0].transcript;
+        if (targetInput.tagName === "TEXTAREA") {
+            // Append text for description so the user can speak multiple times
+            targetInput.value += (targetInput.value ? " " : "") + transcript;
+        } else {
+            // Overwrite text for the title for a cleaner result
+            targetInput.value = transcript;
+        }
+    };
+
+    recognition.onerror = (e) => {
+        console.error("Speech AI Error: ", e.error);
+        btn.classList.remove('listening');
+    };
+
+    recognition.start();
+}
+
+/**
+ * YOUR ORIGINAL ADDRESS & GEOLOCATION LOGIC
+ * Handled via Nominatim (OpenStreetMap)
+ */
 (() => {
     const form = document.getElementById("post-offer-form");
     const locationInput = document.getElementById("location-input");
@@ -84,7 +168,6 @@
     let debounce = null;
     let submitRetryDone = false;
 
-    // Create suggestions dropdown
     const list = document.createElement("ul");
     list.className = "address-suggestions";
     locationInput.parentNode.insertBefore(list, locationInput.nextSibling);
@@ -121,19 +204,14 @@
                     });
                     list.appendChild(li);
                 });
-            } catch (e) {
-                // silent
-            }
+            } catch (e) {}
         }, 300);
     });
 
     document.addEventListener("click", (e) => {
-        if (!list.contains(e.target) && e.target !== locationInput) {
-            clearSuggestions();
-        }
+        if (!list.contains(e.target) && e.target !== locationInput) clearSuggestions();
     });
 
-    // On submit, if address typed but no coords, try to geocode
     form.addEventListener("submit", async (e) => {
         if (submitRetryDone) return;
         const hasAddress = locationInput.value.trim();
@@ -155,10 +233,7 @@
                 form.requestSubmit();
                 return;
             }
-        } catch (e) {
-            // silent
-        }
-
+        } catch (e) {}
         note.textContent = "Please pick a Bulgarian address from the suggestions.";
     });
 })();
