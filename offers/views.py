@@ -30,7 +30,6 @@ def home(request):
 def find(request):
     offers = list(Offer.objects.select_related('created_by').all())
     already_applied_ids = set()
-    
     if request.user.user_type == 'worker':
         already_applied_ids = set(
             Application.objects.filter(worker=request.user).values_list('offer_id', flat=True)
@@ -71,6 +70,7 @@ def post_offer(request):
             category=request.POST['category'],
             offer_type=request.POST['offer_type'],
             location=request.POST['location'],
+            city=request.POST.get('city'),
             # Rounding to 6 decimals for database constraints
             latitude=round(float(lat), 6) if lat else None,
             longitude=round(float(lng), 6) if lng else None,

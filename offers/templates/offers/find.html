@@ -25,7 +25,11 @@
                 <div>
                     <dt>Location</dt>
                     <dd>
-                        {{ offer.location }}
+                        {% if user.is_authenticated and user == offer.accepted_by %}
+                            {{ offer.location }}
+                        {% else %}
+                            {{ offer.city }}
+                        {% endif %}
                         {% if offer.distance_km is not None %}
                             ({{ offer.distance_km }} km away)
                         {% endif %}
