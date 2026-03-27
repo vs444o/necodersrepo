@@ -23,9 +23,11 @@ urlpatterns = [
     path('', views.home, name='home'),
     path('find/', views.find, name='find'),
     path('post/', views.post_offer, name='post_offer'),
-    path('offer/<int:pk>/accept/', views.accept_offer, name='accept_offer'),  
+    path('offer/<int:pk>/accept/', views.accept_offer, name='accept_offer'),
     path('offer/<int:pk>/complete/', views.complete_offer, name='complete_offer'),
     path('offer/<int:pk>/apply/', views.apply_offer, name='apply_offer'),
+    # Added this to fix the NoReverseMatch error in find.html
+    path('offer/<int:pk>/', views.home, name='offer_detail'), 
     path('signup/', views.signup_view, name='signup'),
     path('accounts/', include('django.contrib.auth.urls')),
     path('my-posts/', views.my_posts, name='my_posts'),

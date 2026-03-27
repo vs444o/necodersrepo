@@ -1,40 +1,104 @@
 {% extends "base.html" %}
 
-{% block title %}HelpNow{% endblock %}
+{% block title %}HelpNow - My Dashboard{% endblock %}
 
 {% block content %}
-<section class="hero container">
-    <h1>Daily support for people who need a hand.</h1>
-    <p class="hero-subtitle">
-        HelpNow connects older adults and families with nearby helpers for shopping,
-        cleaning, home tasks, and companionship.
-    </p>
-
-    <div class="hero-actions">
-        {% if user.is_authenticated and user.user_type == "worker" %}
-            <a class="btn btn--primary btn--lg" href="{% url 'find' %}">Find requests</a>
-            <a class="btn btn--secondary btn--lg" href="#how-it-works">How it works</a>
-        {% elif user.is_authenticated and user.user_type == "needer" %}
-            <a class="btn btn--primary btn--lg" href="{% url 'post_offer' %}">Post a request</a>
-            <a class="btn btn--secondary btn--lg" href="{% url 'find' %}">See active requests</a>
-        {% else %}
-            <a class="btn btn--primary btn--lg" href="{% url 'signup' %}">Get started</a>
-            <a class="btn btn--secondary btn--lg" href="{% url 'login' %}">Log in</a>
+<section class="container">
+    {% if user.is_authenticated and user.user_type == "needer" %}
+        <h1 style="margin-top: 20px;">My Posted Help Requests</h1>
+        
+        {% if unread %}
+        <div class="notifications-banner" style="margin-bottom: 25px;">
+            {% for n in unread %}
+                <div class="alert alert--info" style="background: #e3f2fd; padding: 12px; border-radius: 8px; border-left: 5px solid #2196f3; margin-bottom: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.05);">
+                    🔔 {{ n.message }}
+                </div>
+            {% endfor %}
+        </div>
         {% endif %}
-    </div>
-</section>
 
-<section id="how-it-works" class="container info-grid">
-    <article class="panel">
-        <h2>For people asking for help</h2>
-        <p>Submit a simple request with location, type of help, and details.</p>
-        <p>Track status from waiting to accepted and completed.</p>
-    </article>
+        <div class="dashboard-actions" style="margin-bottom: 40px; display: flex; gap: 15px;">
+            <a class="btn btn--primary btn--lg" href="{% url 'post_offer' %}">➕ Post New Request</a>
+            <a class="btn btn--secondary btn--lg" href="{% url 'find' %}">🌍 View All Map Requests</a>
+        </div>
 
-    <article class="panel">
-        <h2>For helpers and volunteers</h2>
-        <p>Browse requests in one place and accept the ones you can support.</p>
-        <p>Mark completed tasks when done to keep everything clear.</p>
-    </article>
+        <div class="my-offers-list">
+            {% for offer in offers %}
+            <article class="card" style="margin-bottom: 25px; border: 1px solid #e0e0e0; padding: 20px; border-radius: 12px; background: #fff; position: relative;">
+                <div class="card-head" style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px;">
+                    <h2 style="margin: 0; font-size: 1.5rem; color: #333;">{{ offer.title }}</h2>
+                    <span class="chip chip--{{ offer.status }}" style="text-transform: uppercase; font-weight: bold; font-size: 0.75rem; letter-spacing: 0.5px;">
+                        {{ offer.get_status_display }}
+                    </span>
+                </div>
+                
+                <p style="color: #555; line-height: 1.6; margin-bottom: 15px;">{{ offer.description }}</p>
+
+                <div class="applicants-box" style="background: #fcfcfc; border: 1px solid #efefef; padding: 15px; border-radius: 10px;">
+                    <h4 style="margin-top: 0; border-bottom: 1px solid #eee; padding-bottom: 8px; color: #444;">Volunteer Applicants</h4>
+                    
+                    {% for app in offer.applications.all %}
+                    <div class="applicant-row" style="display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f0f0f0;">
+                        <div>
+                            <span style="font-weight: 600; color: #2c3e50;">{{ app.worker.username }}</span>
+                            <span style="color: #888; font-size: 0.9em; margin-left: 8px;">Applied on {{ app.created_at|date:"M d" }}</span>
+                        </div>
+                        
+                        {% if offer.status == 'waiting' %}
+                            <form method="post" action="{% url 'accept_application' app.id %}" style="margin: 0;">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn--secondary btn--small" style="background: #27ae60; color: white; border: none;">Accept Helper</button>
+                            </form>
+                        {% elif app.status == 'accepted' %}
+                            <span style="color: #27ae60; font-weight: 700;">✓ Assigned Helper</span>
+                        {% endif %}
+                    </div>
+                    {% empty %}
+                    <p style="font-style: italic; color: #aaa; margin: 10px 0 0 0; text-align: center;">No one has applied yet. We'll notify you when they do!</p>
+                    {% endfor %}
+                </div>
+            </article>
+            {% empty %}
+            <div class="empty-dashboard" style="text-align: center; padding: 60px 20px; background: #f8f9fa; border-radius: 15px; border: 2px dashed #ddd;">
+                <h3 style="color: #888;">You haven't posted any jobs yet.</h3>
+                <p style="color: #aaa; margin-bottom: 25px;">Need a hand with something? Post your first request now.</p>
+                <a href="{% url 'post_offer' %}" class="btn btn--primary">Post a Request</a>
+            </div>
+            {% endfor %}
+        </div>
+
+    {% else %}
+        <section class="hero" style="text-align: center; padding: 80px 20px;">
+            <h1 style="font-size: 3rem; color: #2c3e50;">Daily support for people who need a hand.</h1>
+            <p class="hero-subtitle" style="font-size: 1.25rem; color: #7f8c8d; max-width: 800px; margin: 20px auto 40px;">
+                HelpNow connects older adults and families with nearby helpers for shopping,
+                cleaning, home tasks, and companionship.
+            </p>
+
+            <div class="hero-actions" style="display: flex; justify-content: center; gap: 20px;">
+                {% if user.is_authenticated and user.user_type == "worker" %}
+                    <a class="btn btn--primary btn--lg" href="{% url 'find' %}">Find Nearby Jobs</a>
+                    <a class="btn btn--secondary btn--lg" href="{% url 'my_jobs' %}">My Work Schedule</a>
+                {% else %}
+                    <a class="btn btn--primary btn--lg" href="{% url 'signup' %}">Create Account</a>
+                    <a class="btn btn--secondary btn--lg" href="{% url 'login' %}">Log In</a>
+                {% endif %}
+            </div>
+        </section>
+
+        <section id="how-it-works" class="container info-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 30px; margin-top: 50px;">
+            <article class="panel" style="padding: 35px; border-radius: 15px; background: #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center;">
+                <div style="font-size: 3rem; margin-bottom: 15px;">🤝</div>
+                <h2 style="color: #2c3e50;">For Help Needers</h2>
+                <p style="color: #7f8c8d; line-height: 1.6;">Post your tasks, review volunteer profiles, and pick the best person for the job. Manage everything from your private dashboard.</p>
+            </article>
+
+            <article class="panel" style="padding: 35px; border-radius: 15px; background: #fff; box-shadow: 0 10px 30px rgba(0,0,0,0.05); text-align: center;">
+                <div style="font-size: 3rem; margin-bottom: 15px;">🛠️</div>
+                <h2 style="color: #2c3e50;">For Volunteers</h2>
+                <p style="color: #7f8c8d; line-height: 1.6;">Browse a live map of people needing help in your area. Apply for jobs that match your skills and schedule.</p>
+            </article>
+        </section>
+    {% endif %}
 </section>
 {% endblock %}

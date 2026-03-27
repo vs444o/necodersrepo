@@ -7,6 +7,18 @@
 
     <div id="map" style="height: 400px; width: 100%; border-radius: 12px; margin-bottom: 20px; border: 2px solid #ddd;"></div>
 
+    <div class="offers-list">
+        {% for offer in offers %}
+        <article class="card offer-card"
+                 data-lat="{{ offer.latitude }}"
+                 data-lng="{{ offer.longitude }}"
+                 data-title="{{ offer.title }}">
+
+            <div class="card-head">
+                <h2>{{ offer.title }}</h2>
+                <span class="chip chip--{{ offer.status }}">{{ offer.get_status_display }}</span>
+            </div>
+
             <p class="card-description">{{ offer.description }}</p>
 
             <dl class="meta-grid">
@@ -34,6 +46,7 @@
             </dl>
 
             <p class="meta-note">Posted by {{ offer.created_by.username|default:offer.name }}</p>
+            <p class="distance-label" style="color: #27ae60; font-weight: bold;"></p>
 
             {% if user.is_authenticated and user.user_type == 'worker' and offer.status == 'waiting' %}
                 {% if offer.id in already_applied_ids %}
@@ -52,13 +65,12 @@
                     <button type="submit" class="btn btn--secondary btn--block">Mark as done</button>
                 </form>
             {% endif %}
+
         </article>
-    {% empty %}
+        {% empty %}
         <div class="empty-state">
             <p>No requests yet.</p>
         </div>
-        {% empty %}
-        <p>No help requests found in your area.</p>
         {% endfor %}
     </div>
 </section>
@@ -68,39 +80,38 @@
 
 <script>
 document.addEventListener("DOMContentLoaded", () => {
-    // Initialize the map centered on Bulgaria by default
-    const map = L.map('map').setView([42.6977, 23.3219], 12);
+    const map = L.map('map').setView([42.6977, 23.3219], 7);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap contributors'
     }).addTo(map);
 
     const offerCards = document.querySelectorAll('.offer-card');
-    const helpMarkers = L.layerGroup().addTo(map);
     let workerMarker = null;
 
     function getDistance(lat1, lon1, lat2, lon2) {
-        const R = 6371; // km
+        const R = 6371;
         const dLat = (lat2 - lat1) * Math.PI / 180;
         const dLon = (lon2 - lon1) * Math.PI / 180;
         const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
-                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon/2) * Math.sin(dLon/2);
-        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
-        return (R * c).toFixed(2);
+                  Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                  Math.sin(dLon/2) * Math.sin(dLon/2);
+        return (R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))).toFixed(2);
     }
 
+    // Plot offer markers on map
     offerCards.forEach(card => {
         const lat = parseFloat(card.dataset.lat);
         const lng = parseFloat(card.dataset.lng);
         const title = card.dataset.title;
-
-        if (lat && lng) {
+        if (!isNaN(lat) && !isNaN(lng)) {
             L.marker([lat, lng])
-                .addTo(helpMarkers)
+                .addTo(map)
                 .bindPopup(`<b>Help Needed:</b><br>${title}`);
         }
     });
 
+    // Track worker's live location
     if ("geolocation" in navigator) {
         navigator.geolocation.watchPosition((position) => {
             const lat = position.coords.latitude;
@@ -115,57 +126,21 @@ document.addEventListener("DOMContentLoaded", () => {
                     fillOpacity: 0.8,
                     radius: 10
                 }).addTo(map).bindPopup("<b>You are here</b>").openPopup();
-                
-                map.setView([lat, lng], 14);
+                map.setView([lat, lng], 13);
             }
 
+            // Update distance labels on cards
             offerCards.forEach(card => {
                 const oLat = parseFloat(card.dataset.lat);
                 const oLng = parseFloat(card.dataset.lng);
                 const distLabel = card.querySelector('.distance-label');
-
-                if (oLat && oLng) {
-                    const d = getDistance(lat, lng, oLat, oLng);
-                    distLabel.textContent = `📍 ${d} km away from you`;
+                if (!isNaN(oLat) && !isNaN(oLng) && distLabel) {
+                    distLabel.textContent = `📍 ${getDistance(lat, lng, oLat, oLng)} km away from you`;
                 }
             });
 
-        }, (error) => {
-            console.error("Error getting location: ", error);
-        }, {
-            enableHighAccuracy: true
-        });
+        }, (err) => console.error(err), { enableHighAccuracy: true });
     }
 });
 </script>
-
-<style>
-    .address-suggestions {
-        list-style: none;
-        padding: 0;
-        margin: 0;
-        border: 1px solid #ccc;
-        max-height: 200px;
-        overflow-y: auto;
-        background: white;
-        position: absolute;
-        width: 100%;
-        z-index: 1000;
-    }
-    .address-suggestion-item {
-        padding: 10px;
-        cursor: pointer;
-        border-bottom: 1px solid #eee;
-    }
-    .address-suggestion-item:hover {
-        background-color: #f0f0f0;
-    }
-    .offer-card {
-        border: 1px solid #eee;
-        padding: 15px;
-        margin-bottom: 15px;
-        border-radius: 8px;
-        background: #fdfdfd;
-    }
-</style>
 {% endblock %}
