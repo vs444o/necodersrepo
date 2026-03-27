@@ -1,4 +1,5 @@
 from django.db import models
+from django.db.models import Avg
 from django.contrib.auth.models import AbstractUser
 
 class Offer(models.Model):
@@ -90,6 +91,16 @@ class User(AbstractUser):
     def __str__(self):
         return self.username
 
+    @property
+    def average_rating(self):
+        """
+        Average overall score from all completed jobs this worker has been rated for.
+        Returns a float or None when there are no ratings yet.
+        """
+        from .models import Rating  # local import to avoid circular reference at import time
+        agg = Rating.objects.filter(worker=self).aggregate(avg=Avg('overall_score'))
+        return agg['avg']
+
 class Application(models.Model):
     STATUS_CHOICES = [
         ('pending',  'Pending'),    
@@ -107,7 +118,38 @@ class Application(models.Model):
  
     def __str__(self):
         return f"{self.worker.username} → {self.offer.title}"
- 
+
+
+class Rating(models.Model):
+    """
+    Feedback from a help needer for a worker on a single completed offer.
+    Scores are 1–5 for performance, behaviour, and speed; overall_score stores the average.
+    """
+    offer = models.OneToOneField(
+        Offer,
+        on_delete=models.CASCADE,
+        related_name='rating',
+    )
+    worker = models.ForeignKey(
+        'User',
+        on_delete=models.CASCADE,
+        related_name='ratings_received',
+    )
+    needer = models.ForeignKey(
+        'User',
+        on_delete=models.CASCADE,
+        related_name='ratings_given',
+    )
+    performance = models.PositiveSmallIntegerField()
+    behaviour = models.PositiveSmallIntegerField()
+    speed = models.PositiveSmallIntegerField()
+    overall_score = models.DecimalField(max_digits=3, decimal_places=2)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Rating {self.overall_score}/5 for {self.worker.username} on {self.offer.title}"
+
+
 class Notification(models.Model):
     user    = models.ForeignKey('User', on_delete=models.CASCADE, related_name='notifications')
     message = models.CharField(max_length=300)

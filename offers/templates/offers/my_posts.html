@@ -66,7 +66,47 @@
         {% endif %}
 
         {% if offer.status == 'completed' %}
-            <p style="margin-top:.75rem;color:green;">Завършено от <strong>{{ offer.completed_by.username }}</strong> на {{ offer.completed_at|date:"d.m.Y" }}</p>
+            <div style="margin-top:1rem; padding-top:1rem; border-top:1px dashed #ccc;">
+                <p style="color:green; font-weight:600;">🎉 Job completed!</p>
+                
+                {% if offer.id in rated_offer_ids %}
+                    <p style="color:var(--muted); font-size:0.9rem;">Rating submitted. Thank you!</p>
+                {% else %}
+                    <h3 style="font-size:1.1rem; margin-bottom:0.8rem;">Rate the help you received:</h3>
+                    <form method="post" action="{% url 'rate_offer' offer.pk %}" style="max-width:400px;">
+                        {% csrf_token %}
+                        
+                        <div style="margin-bottom:1rem;">
+                            <label style="display:block; font-size:0.85rem; color:#555;">Performance</label>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <input type="range" name="performance" min="1" max="5" step="0.5" value="5" 
+                                       style="flex:1;" oninput="this.nextElementSibling.value = this.value">
+                                <output style="font-weight:bold; width:30px;">5.0</output>⭐
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom:1rem;">
+                            <label style="display:block; font-size:0.85rem; color:#555;">Behaviour</label>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <input type="range" name="behaviour" min="1" max="5" step="0.5" value="5" 
+                                       style="flex:1;" oninput="this.nextElementSibling.value = this.value">
+                                <output style="font-weight:bold; width:30px;">5.0</output>⭐
+                            </div>
+                        </div>
+
+                        <div style="margin-bottom:1.5rem;">
+                            <label style="display:block; font-size:0.85rem; color:#555;">Speed</label>
+                            <div style="display:flex; align-items:center; gap:10px;">
+                                <input type="range" name="speed" min="1" max="5" step="0.5" value="5" 
+                                       style="flex:1;" oninput="this.nextElementSibling.value = this.value">
+                                <output style="font-weight:bold; width:30px;">5.0</output>⭐
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn btn--secondary btn--sm">Submit Rating</button>
+                    </form>
+                {% endif %}
+            </div>
         {% endif %}
     </article>
     {% endfor %}

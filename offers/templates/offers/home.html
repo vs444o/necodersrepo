@@ -38,6 +38,13 @@
                         <div>
                             <span style="font-weight:600;color:#2c3e50;">{{ app.worker.username }}</span>
                             <span style="color:#888;font-size:0.9em;margin-left:8px;">Кандидатствал/а на {{ app.created_at|date:"d M" }}</span>
+                            <div style="color:#f39c12;font-size:0.9em;margin-top:4px;">
+                                {% if app.worker.average_rating %}
+                                    ⭐ {{ app.worker.average_rating|floatformat:1 }}/5 overall
+                                {% else %}
+                                    No ratings yet
+                                {% endif %}
+                            </div>
                         </div>
 
                         {% if offer.status == 'waiting' and app.status == 'pending' %}
@@ -53,6 +60,46 @@
                     <p style="font-style:italic;color:#aaa;margin:10px 0 0 0;text-align:center;">Все още няма кандидати.</p>
                     {% endfor %}
                 </div>
+
+                {% if offer.status == 'completed' and offer.accepted_by and offer.id in rated_offer_ids %}
+                    <p style="margin:8px 0 0 0;font-size:0.9em;color:#27ae60;">
+                        Thank you for rating {{ offer.accepted_by.username }} for this job.
+                    </p>
+                {% elif offer.status == 'completed' and offer.accepted_by and offer.id not in rated_offer_ids %}
+                    <div style="margin-top:12px;padding:12px;border-radius:10px;background:#f8f9fa;border:1px solid #e0e0e0;">
+                        <form method="post" action="{% url 'rate_offer' offer.id %}">
+                            {% csrf_token %}
+                            <p style="margin-top:0;margin-bottom:8px;font-weight:600;">Rate your helper {{ offer.accepted_by.username }} (1–5)</p>
+                            <div style="display:flex;flex-wrap:wrap;gap:10px;font-size:0.9em;">
+                                <label>
+                                    Performance:
+                                    <select name="performance">
+                                        {% for i in "12345" %}
+                                            <option value="{{ forloop.counter }}">{{ forloop.counter }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </label>
+                                <label>
+                                    Behaviour:
+                                    <select name="behaviour">
+                                        {% for i in "12345" %}
+                                            <option value="{{ forloop.counter }}">{{ forloop.counter }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </label>
+                                <label>
+                                    Speed:
+                                    <select name="speed">
+                                        {% for i in "12345" %}
+                                            <option value="{{ forloop.counter }}">{{ forloop.counter }}</option>
+                                        {% endfor %}
+                                    </select>
+                                </label>
+                            </div>
+                            <button type="submit" class="btn btn--primary btn--sm" style="margin-top:10px;">Submit rating</button>
+                        </form>
+                    </div>
+                {% endif %}
             </article>
             {% empty %}
             <div style="text-align:center;padding:60px 20px;background:#f8f9fa;border-radius:15px;border:2px dashed #ddd;">
