@@ -1,5 +1,4 @@
 {% extends "base.html" %}
-
 {% block title %}HelpNow{% endblock %}
 
 {% block content %}
@@ -68,7 +67,7 @@
             {% empty %}
             <div style="text-align:center;padding:60px 20px;background:#f8f9fa;border-radius:15px;border:2px dashed #ddd;">
                 <h3 style="color:#888;">You haven't posted any jobs yet.</h3>
-                <p style="color:#aaa;margin-bottom:25px;">Need a hand with something? Post your first request now.</p>
+                <p style="color:#aaa;margin-bottom:25px;"><b>Need a hand with something? Post your first request now.</b></p>
                 <a href="{% url 'post_offer' %}" class="btn btn--primary">Post a Request</a>
             </div>
             {% endfor %}
@@ -76,8 +75,8 @@
 
     {% else %}
         <section class="hero">
-            <h1>Daily support for people who need a hand.</h1>
-            <p class="hero-subtitle">HelpNow connects older adults and families with nearby helpers for shopping, cleaning, home tasks, and companionship.</p>
+            <h1>Daily support for people who need a hand</h1>
+            <p class="hero-subtitle"><b>HelpNow connects older adults and families with nearby helpers for shopping, cleaning, home tasks, and companionship.</b></p>
             <div class="hero-actions">
                 {% if user.is_authenticated and user.user_type == "worker" %}
                     <a class="btn btn--primary btn--lg" href="{% url 'find' %}">Find Nearby Jobs</a>
@@ -93,12 +92,12 @@
             <article class="panel" style="text-align:center;">
                 <div style="font-size:3rem;margin-bottom:15px;">🤝</div>
                 <h2>For Help Needers</h2>
-                <p style="color:#7f8c8d;line-height:1.6;">Post your tasks, review volunteer profiles, and pick the best person for the job.</p>
+                <p style="color:#7f8c8d;line-height:1.6;"><b>Post your tasks, review volunteer profiles, and pick the best person for the job.</b></p>
             </article>
             <article class="panel" style="text-align:center;">
                 <div style="font-size:3rem;margin-bottom:15px;">🛠️</div>
                 <h2>For Volunteers</h2>
-                <p style="color:#7f8c8d;line-height:1.6;">Browse a live map of people needing help in your area and apply for jobs.</p>
+                <p style="color:#7f8c8d;line-height:1.6;"><b>Browse a live map of people needing help in your area and apply for jobs.</b></p>
             </article>
         </section>
     {% endif %}
