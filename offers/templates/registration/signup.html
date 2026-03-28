@@ -18,15 +18,10 @@
             {% if form.username.errors %}{{ form.username.errors }}{% endif %}
         </p>
         <p>
-            <label for="{{ form.email.id_for_label }}">Имейл</label>
+            <label for="{{ form.email.id_for_label }}">{% if signup_kind == 'needer' %}Имейл *{% else %}Имейл{% endif %}</label>
             {{ form.email }}
             {% if form.email.errors %}{{ form.email.errors }}{% endif %}
         </p>
-        <!-- <p>
-            <label for="{{ form.user_type.id_for_label }}">Вие сте *</label>
-            {{ form.user_type }}
-            {% if form.user_type.errors %}{{ form.user_type.errors }}{% endif %}
-        </p> -->
         <p>
             <label for="{{ form.password1.id_for_label }}">Парола *</label>
             {{ form.password1 }}
@@ -46,6 +41,27 @@
         </p>
         {{ form.latitude }}
         {{ form.longitude }}
+        <input type="hidden" name="city" id="id_city_hidden">
+
+        {% if signup_kind == 'needer' %}
+        <p>
+            <label for="id_phone_needer">Телефон * <small style="font-weight:normal;">(ще бъде споделен с одобрения доброволец)</small></label>
+            <input type="tel" id="id_phone_needer" name="phone" required placeholder="+359...">
+        </p>
+        {% endif %}
+
+        {% if signup_kind == 'worker' %}
+        <p>
+            <label for="{{ form.phone.id_for_label }}">Телефон *</label>
+            {{ form.phone }}
+            {% if form.phone.errors %}{{ form.phone.errors }}{% endif %}
+        </p>
+        <p>
+            <label for="{{ form.skills.id_for_label }}">Умения *</label>
+            {{ form.skills }}
+            {% if form.skills.errors %}{{ form.skills.errors }}{% endif %}
+        </p>
+        {% endif %}
 
         {% if form.errors %}
             <div class="form-errors" role="alert">
@@ -61,18 +77,6 @@
                     {% endfor %}
                 </ul>
             </div>
-        {% endif %}
-        {% if signup_kind == 'worker' %}
-        <p>
-            <label for="{{ form.phone.id_for_label }}">Телефон</label>
-            {{ form.phone }}
-            {% if form.phone.errors %}{{ form.phone.errors }}{% endif %}
-        </p>
-        <p>
-            <label for="{{ form.skills.id_for_label }}">Умения</label>
-            {{ form.skills }}
-            {% if form.skills.errors %}{{ form.skills.errors }}{% endif %}
-        </p>
         {% endif %}
 
         <p id="location-note" class="help-text"></p>
@@ -91,19 +95,23 @@
     const addressInput = document.getElementById("id_address_input");
     const latInput = document.getElementById("id_latitude");
     const lngInput = document.getElementById("id_longitude");
+    const cityInput = document.getElementById("id_city_hidden");
     const note = document.getElementById("location-note");
     const googleApiKey = "{{ google_maps_api_key|default:''|escapejs }}";
-    let googleReady = false;
 
     if (!addressInput) return;
 
-    const activateGooglePlaces = () => {
-        googleReady = true;
-        note.textContent = "Показваме предложения за адрес (Google Maps).";
+    const extractCity = (components) => {
+        const cityComponent = components.find(c =>
+            c.types.includes('locality') || c.types.includes('postal_town')
+        );
+        return cityComponent ? cityComponent.long_name : '';
+    };
 
+    const activateGooglePlaces = () => {
         const autocomplete = new google.maps.places.Autocomplete(addressInput, {
             componentRestrictions: { country: "bg" },
-            fields: ["formatted_address", "geometry"],
+            fields: ["formatted_address", "geometry", "address_components"],
             types: ["address"],
         });
 
@@ -114,16 +122,17 @@
                 lngInput.value = "";
                 return;
             }
-
             addressInput.value = place.formatted_address || addressInput.value;
             latInput.value = Number(place.geometry.location.lat()).toFixed(6);
             lngInput.value = Number(place.geometry.location.lng()).toFixed(6);
-            note.textContent = "Адресът е запазен.";
+            cityInput.value = extractCity(place.address_components || []);
+            note.textContent = "Адресът е запазен ✓";
         });
 
         addressInput.addEventListener("input", () => {
             latInput.value = "";
             lngInput.value = "";
+            cityInput.value = "";
         });
 
         form.addEventListener("submit", (e) => {
@@ -132,7 +141,7 @@
             if (!hasAddress) return;
             if (!hasCoords) {
                 e.preventDefault();
-                note.textContent = "Моля, изберете адрес от предложенията, за да запазим точната локация.";
+                note.textContent = "Моля, изберете адрес от предложенията.";
             }
         });
     };
@@ -144,19 +153,14 @@
                     activateGooglePlaces();
                     return;
                 }
-            } catch (e) {
-                // ignore
-            }
-            note.textContent = "Google Maps не се зареди. Проверете ключа и настройките (Places API).";
+            } catch (e) {}
+            note.textContent = "Google Maps не се зареди.";
         };
-
         const script = document.createElement("script");
         script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleApiKey)}&libraries=places&callback=__initSignupGooglePlaces`;
         script.async = true;
         script.defer = true;
-        script.onerror = () => {
-            note.textContent = "Google Maps не се зареди. Проверете ключа и настройките (Places API).";
-        };
+        script.onerror = () => { note.textContent = "Google Maps не се зареди."; };
         document.head.appendChild(script);
     } else {
         note.textContent = "Липсва Google Maps API ключ.";

@@ -11,104 +11,108 @@
 <section class="container">
 
     {% for notif in unread %}
-        <div style="background:#e8f4fd;border-left:4px solid #3b82f6;padding:.75rem 1rem;margin-bottom:.75rem;border-radius:4px;">
+        <div style="background:#e8f4fd;border-left:4px solid #3b82f6;padding:.75rem 1rem;margin-bottom:.75rem;border-radius:4px;font-size:1.1rem;font-weight:700;">
             🔔 {{ notif.message }}
         </div>
     {% endfor %}
 
     {% if not applications %}
-        <p>Все още не сте кандидатствали за задача. <a href="{% url 'dashboard' %}">Вижте молбите в таблото →</a></p>
+        <p style="font-size:1.2rem;">Все още не сте кандидатствали за задача. <a href="{% url 'dashboard' %}">Вижте молбите в таблото →</a></p>
     {% endif %}
 
-    {% with current=applications|dictsortreversed:"created_at" %}
     <section style="margin-top:1rem;margin-bottom:2rem;">
-        <h2 style="font-size:1.2rem;margin-bottom:0.75rem;">Текущи задачи</h2>
-        {% with active_list=applications|dictsortreversed:"created_at" %}
-        {% for app in active_list %}
+        <h2 style="font-size:1.4rem;margin-bottom:0.75rem;">Текущи задачи</h2>
+
+        {% for app in applications %}
             {% if app.offer.status == 'waiting' or app.offer.status == 'accepted' %}
-    <article class="card" style="margin-bottom:1.2rem;">
+            <article class="card" style="margin-bottom:1.2rem;">
 
-        <div class="card-head">
-            <h2>{{ app.offer.title }}</h2>
-            {# We show the APPLICATION status, not the offer status #}
-            {# This tells the worker exactly where they stand personally #}
-            {% if app.status == 'pending' %}
-                <span class="chip chip--waiting">Чака отговор</span>
-            {% elif app.status == 'accepted' %}
-                {% if app.offer.status == 'accepted' %}
-                    <span class="chip chip--waiting">Очаква изпълнение</span>
-                {% elif app.offer.status == 'completed' %}
-                    <span class="chip chip--completed">Готово</span>
+                <div class="card-head">
+                    <h2 style="font-size:1.4rem;">{{ app.offer.title }}</h2>
+                    {% if app.status == 'pending' %}
+                        <span class="chip chip--waiting">Чака отговор</span>
+                    {% elif app.status == 'accepted' %}
+                        {% if app.offer.status == 'accepted' %}
+                            <span class="chip chip--waiting">Очаква изпълнение</span>
+                        {% else %}
+                            <span class="chip chip--accepted">Прието ✅</span>
+                        {% endif %}
+                    {% elif app.status == 'rejected' %}
+                        <span class="chip chip--completed">Не сте избран/а</span>
+                    {% endif %}
+                </div>
+
+                <p style="color:var(--muted,#888);font-size:1.05rem;">
+                    {{ app.offer.get_category_display }} · {{ app.offer.city }} · заявено на {{ app.created_at|date:"d.m.Y" }}
+                </p>
+
+                <p style="font-size:1.1rem;">{{ app.offer.description }}</p>
+
+                {% if app.offer.price %}
+                    <p style="font-size:1.1rem;font-weight:700;">💰 {{ app.offer.price }} лв.</p>
                 {% else %}
-                    <span class="chip chip--accepted">Прието ✅</span>
+                    <p style="font-size:1.1rem;font-weight:700;">🤝 Доброволна помощ</p>
                 {% endif %}
-            {% elif app.status == 'rejected' %}
-                <span class="chip chip--completed">Не сте избран/а</span>
-            {% endif %}
-        </div>
 
-        <p style="color:var(--muted,#888);font-size:.9rem;">
-            {{ app.offer.get_category_display }} · {{ app.offer.location }} · заявено на {{ app.created_at|date:"d.m.Y" }}
-        </p>
+                {% if app.status == 'accepted' and app.offer.status == 'accepted' %}
+                    <p style="font-size:1.1rem;font-weight:700;margin-bottom:0.5rem;">
+                        📍 Адрес: <strong>{{ app.offer.location }}</strong>
+                    </p>
+                    <p style="font-size:1.1rem;font-weight:700;margin-bottom:1rem;">
+                        📞 Телефон на търсещия помощ: <strong>{{ app.offer.created_by.phone|default:"не е въведен" }}</strong>
+                    </p>
+                    <form method="post" action="{% url 'complete_offer' app.offer.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn--primary btn--block" style="font-size:1.15rem;">✅ Отбележи като готово</button>
+                    </form>
+                {% endif %}
 
-        <p>{{ app.offer.description }}</p>
+                {% if app.status == 'pending' %}
+                    <form method="post" action="{% url 'withdraw_application' app.pk %}" style="margin-top:0.75rem;">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn--secondary btn--block" style="font-size:1.1rem;background:#fee2e2;color:#991b1b;border-color:#fca5a5;">
+                            ↩️ Оттегли кандидатурата
+                        </button>
+                    </form>
+                {% endif %}
 
-        {% if app.offer.price %}
-            <p style="font-size:.9rem;">💰 {{ app.offer.price }} EUR</p>
-        {% endif %}
-
-        {# Mark as Done button — only if this worker was accepted AND offer is still accepted (not completed yet) #}
-        {% if app.status == 'accepted' and app.offer.status == 'accepted' %}
-            <form method="post" action="{% url 'complete_offer' app.offer.pk %}">
-                {% csrf_token %}
-                <button type="submit" class="btn btn--primary btn--block">Отбележи като готово</button>
-            </form>
-        {% endif %}
-
-        {% if app.offer.status == 'completed' %}
-            <p style="color:green;margin-top:.75rem;">🎉 Завършено на {{ app.offer.completed_at|date:"d.m.Y" }}</p>
-        {% endif %}
-
-    </article>
+            </article>
             {% endif %}
         {% empty %}
-            <p>Нямате текущи задачи. Вижте <a href="{% url 'dashboard' %}">таблото</a> за нови молби.</p>
+            <p style="font-size:1.1rem;">Нямате текущи задачи. Вижте <a href="{% url 'dashboard' %}">таблото</a> за нови молби.</p>
         {% endfor %}
-        {% endwith %}
     </section>
 
     <section>
-        <h2 style="font-size:1.2rem;margin-bottom:0.75rem;">Завършени задачи (история)</h2>
-        {% with done_list=applications|dictsortreversed:"created_at" %}
-        {% for app in done_list %}
+        <h2 style="font-size:1.4rem;margin-bottom:0.75rem;">Завършени задачи (история)</h2>
+
+        {% for app in applications %}
             {% if app.offer.status == 'completed' %}
-    <article class="card" style="margin-bottom:1.2rem;opacity:0.9;">
+            <article class="card" style="margin-bottom:1.2rem;opacity:0.9;">
 
-        <div class="card-head">
-            <h2>{{ app.offer.title }}</h2>
-            <span class="chip chip--completed">Готово</span>
-        </div>
+                <div class="card-head">
+                    <h2 style="font-size:1.4rem;">{{ app.offer.title }}</h2>
+                    <span class="chip chip--completed">Готово</span>
+                </div>
 
-        <p style="color:var(--muted,#888);font-size:.9rem;">
-            {{ app.offer.get_category_display }} · {{ app.offer.location }} · завършено на {{ app.offer.completed_at|date:"d.m.Y" }}
-        </p>
+                <p style="color:var(--muted,#888);font-size:1.05rem;">
+                    {{ app.offer.get_category_display }} · {{ app.offer.city }} · завършено на {{ app.offer.completed_at|date:"d.m.Y" }}
+                </p>
 
-        <p>{{ app.offer.description }}</p>
+                <p style="font-size:1.1rem;">{{ app.offer.description }}</p>
 
-        {% if app.offer.price %}
-            <p style="font-size:.9rem;">💰 {{ app.offer.price }} EUR</p>
-        {% endif %}
+                {% if app.offer.price %}
+                    <p style="font-size:1.1rem;font-weight:700;">💰 {{ app.offer.price }} лв.</p>
+                {% endif %}
 
-        <p style="color:green;margin-top:.75rem;">🎉 Завършено на {{ app.offer.completed_at|date:"d.m.Y" }}</p>
+                <p style="color:green;margin-top:.75rem;font-size:1.2rem;font-weight:800;">🎉 Завършено на {{ app.offer.completed_at|date:"d.m.Y" }}</p>
 
-    </article>
+            </article>
             {% endif %}
         {% empty %}
-            <p>Все още нямате завършени задачи.</p>
+            <p style="font-size:1.1rem;">Все още нямате завършени задачи.</p>
         {% endfor %}
-        {% endwith %}
     </section>
-    {% endwith %}
 
 </section>
 {% endblock %}

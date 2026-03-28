@@ -9,11 +9,21 @@
         align-items: center;
         gap: 6px;
         color: #1d3d36;
-        font-size: 1rem;
+        font-size: 1.1rem;
         font-weight: 800;
         line-height: 1.25;
     }
+    .notif-banner {
+        background: #e8f4fd;
+        border-left: 4px solid #3b82f6;
+        padding: .75rem 1rem;
+        margin-bottom: .75rem;
+        border-radius: 4px;
+        font-size: 1.1rem;
+        font-weight: 700;
+    }
 </style>
+
 <section class="container page-header">
     <h1>Моите публикации</h1>
     <p>Тук виждате молбите си и кой е кандидатствал.</p>
@@ -22,100 +32,113 @@
 <section class="container">
 
     {% for notif in unread %}
-        <div class="notif-banner">{{ notif.message }}</div>
+        <div class="notif-banner">🔔 {{ notif.message }}</div>
     {% endfor %}
 
     {% if not offers %}
-        <p>Все още нямате публикувани молби. <a href="{% url 'post_offer' %}">Публикувай сега →</a></p>
+        <p style="font-size:1.2rem;">Все още нямате публикувани молби. <a href="{% url 'post_offer' %}">Публикувай сега →</a></p>
     {% endif %}
 
     {% for offer in offers %}
     <article class="card" style="margin-bottom:1.5rem;">
         <div class="card-head">
-            <h2>{{ offer.title }}</h2>
+            <h2 style="font-size:1.6rem;">{{ offer.title }}</h2>
             <span class="chip chip--{{ offer.status }}">{{ offer.get_status_display }}</span>
         </div>
 
-        <p style="color:var(--muted,#888);font-size:.9rem;">
+        <p style="color:var(--muted,#888);font-size:1.05rem;">
             {{ offer.get_category_display }} · {{ offer.location }} · {{ offer.created_at|date:"d M Y" }}
         </p>
 
-        <p>{{ offer.description }}</p>
+        <p style="font-size:1.1rem;">{{ offer.description }}</p>
 
         {% if offer.status == 'waiting' %}
             {% with apps=offer.applications.all %}
                 {% if apps %}
-                    <h3 style="margin-top:1rem;">
-                        Кой е кандидатствал <span style="font-weight:normal;font-size:.9rem;">({{ apps|length }})</span>
+                    <h3 style="margin-top:1rem;font-size:1.3rem;">
+                        Кандидати <span style="font-weight:normal;font-size:1rem;">({{ apps|length }})</span>
                     </h3>
                     <ul style="list-style:none;padding:0;margin:0;">
                         {% for app in apps %}
-                        <li style="display:flex;align-items:center;gap:1rem;padding:.6rem 0;border-bottom:1px solid var(--border,#eee);">
-                            <span style="flex:1;font-weight:600;">{{ app.worker.username }}</span>
-                            <span class="elderly-meta-text">{{ app.created_at|date:"d M, H:i" }}</span>
-                            <span class="elderly-meta-text">📞 {% if app.worker.worker_phone %}{{ app.worker.worker_phone }}{% else %}няма телефон{% endif %}</span>
-                            {% if app.status == 'pending' %}
-                                <form method="post" action="{% url 'accept_application' app.pk %}">
-                                    {% csrf_token %}
-                                    <button type="submit" class="btn btn--primary btn--sm">Приеми</button>
-                                </form>
-                            {% elif app.status == 'accepted' %}
-                                <span style="color:green;font-weight:600;">✅ Приет/а</span>
-                            {% elif app.status == 'rejected' %}
-                                <span style="color:var(--muted,#888);">Отказан/а</span>
-                            {% endif %}
+                        <li style="padding:1rem 0;border-bottom:1px solid var(--border,#eee);">
+                            <div style="display:flex;align-items:center;gap:1rem;flex-wrap:wrap;">
+                                <span style="flex:1;font-weight:800;font-size:1.2rem;">{{ app.worker.username }}</span>
+                                <span class="elderly-meta-text">📅 {{ app.created_at|date:"d M, H:i" }}</span>
+                                <span class="elderly-meta-text">📞 {% if app.worker.worker_phone %}{{ app.worker.worker_phone }}{% else %}няма телефон{% endif %}</span>
+                                {% if app.worker.average_rating %}
+                                    <span class="elderly-meta-text">⭐ {{ app.worker.average_rating|floatformat:1 }}/5</span>
+                                {% endif %}
+                            </div>
+                            <div style="display:flex;gap:0.75rem;margin-top:0.75rem;flex-wrap:wrap;">
+                                {% if app.status == 'pending' %}
+                                    <form method="post" action="{% url 'accept_application' app.pk %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn--primary btn--sm" style="font-size:1.1rem;padding:0.6rem 1.2rem;">✅ Приеми</button>
+                                    </form>
+                                    <form method="post" action="{% url 'reject_application' app.pk %}">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn--secondary btn--sm" style="font-size:1.1rem;padding:0.6rem 1.2rem;background:#fee2e2;color:#991b1b;border-color:#fca5a5;">❌ Откажи</button>
+                                    </form>
+                                {% elif app.status == 'accepted' %}
+                                    <span style="color:green;font-weight:800;font-size:1.1rem;">✅ Приет/а</span>
+                                {% elif app.status == 'rejected' %}
+                                    <span style="color:var(--muted,#888);font-size:1.1rem;">❌ Отказан/а</span>
+                                {% endif %}
+                            </div>
                         </li>
                         {% endfor %}
                     </ul>
                 {% else %}
-                    <p style="color:var(--muted,#888);margin-top:.75rem;">Все още няма кандидати.</p>
+                    <p style="color:var(--muted,#888);margin-top:.75rem;font-size:1.1rem;">Все още няма кандидати.</p>
                 {% endif %}
             {% endwith %}
         {% endif %}
 
         {% if offer.status == 'accepted' and offer.accepted_by %}
-            <p style="margin-top:.75rem;">Поема се от <strong>{{ offer.accepted_by.username }}</strong></p>
+            <p style="margin-top:.75rem;font-size:1.2rem;font-weight:700;">
+                🤝 Поема се от <strong>{{ offer.accepted_by.username }}</strong>
+            </p>
         {% endif %}
 
         {% if offer.status == 'completed' %}
-            <div style="margin-top:1rem; padding-top:1rem; border-top:1px dashed #ccc;">
-                <p style="color:green; font-weight:600;">🎉 Job completed!</p>
-                
+            <div style="margin-top:1rem;padding-top:1rem;border-top:1px dashed #ccc;">
+                <p style="color:green;font-weight:800;font-size:1.2rem;">🎉 Задачата е завършена!</p>
+
                 {% if offer.id in rated_offer_ids %}
-                    <p style="color:var(--muted); font-size:0.9rem;">Оценката бе изпратена, благодаря Ви!</p>
+                    <p style="color:var(--muted);font-size:1.05rem;">Оценката бе изпратена, благодаря Ви!</p>
                 {% else %}
-                    <h3 style="font-size:1.1rem; margin-bottom:0.8rem;">Rate the help you received:</h3>
-                    <form method="post" action="{% url 'rate_offer' offer.pk %}" style="max-width:400px;">
+                    <h3 style="font-size:1.2rem;margin-bottom:0.8rem;">Оценете получената помощ:</h3>
+                    <form method="post" action="{% url 'rate_offer' offer.pk %}" style="max-width:500px;">
                         {% csrf_token %}
-                        
-                        <div style="margin-bottom:1rem;">
-                            <label style="display:block; font-size:0.85rem; color:#555;">Performance</label>
-                            <div style="display:flex; align-items:center; gap:10px;">
-                                <input type="range" name="performance" min="1" max="5" step="0.5" value="5" 
+
+                        <div style="margin-bottom:1.2rem;">
+                            <label style="display:block;font-size:1.1rem;font-weight:700;margin-bottom:0.4rem;">Изпълнение</label>
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <input type="range" name="performance" min="1" max="5" step="0.5" value="5"
                                        style="flex:1;" oninput="this.nextElementSibling.value = this.value">
-                                <output style="font-weight:bold; width:30px;">5.0</output>⭐
+                                <output style="font-weight:bold;width:35px;font-size:1.1rem;">5.0</output>⭐
                             </div>
                         </div>
 
-                        <div style="margin-bottom:1rem;">
-                            <label style="display:block; font-size:0.85rem; color:#555;">Отношение</label>
-                            <div style="display:flex; align-items:center; gap:10px;">
-                                <input type="range" name="behaviour" min="1" max="5" step="0.5" value="5" 
+                        <div style="margin-bottom:1.2rem;">
+                            <label style="display:block;font-size:1.1rem;font-weight:700;margin-bottom:0.4rem;">Отношение</label>
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <input type="range" name="behaviour" min="1" max="5" step="0.5" value="5"
                                        style="flex:1;" oninput="this.nextElementSibling.value = this.value">
-                                <output style="font-weight:bold; width:30px;">5.0</output>⭐
+                                <output style="font-weight:bold;width:35px;font-size:1.1rem;">5.0</output>⭐
                             </div>
                         </div>
 
                         <div style="margin-bottom:1.5rem;">
-                            <label style="display:block; font-size:0.85rem; color:#555;">Скорост</label>
-                            <div style="display:flex; align-items:center; gap:10px;">
-                                <input type="range" name="speed" min="1" max="5" step="0.5" value="5" 
+                            <label style="display:block;font-size:1.1rem;font-weight:700;margin-bottom:0.4rem;">Скорост</label>
+                            <div style="display:flex;align-items:center;gap:10px;">
+                                <input type="range" name="speed" min="1" max="5" step="0.5" value="5"
                                        style="flex:1;" oninput="this.nextElementSibling.value = this.value">
-                                <output style="font-weight:bold; width:30px;">5.0</output>⭐
+                                <output style="font-weight:bold;width:35px;font-size:1.1rem;">5.0</output>⭐
                             </div>
                         </div>
 
-                        <button type="submit" class="btn btn--secondary btn--sm">Изпратете оценката</button>
+                        <button type="submit" class="btn btn--primary" style="font-size:1.1rem;">Изпратете оценката</button>
                     </form>
                 {% endif %}
             </div>

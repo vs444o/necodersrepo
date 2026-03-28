@@ -28,18 +28,18 @@ urlpatterns = [
     path('offer/<int:pk>/complete/', views.complete_offer, name='complete_offer'),
     path('offer/<int:pk>/apply/', views.apply_offer, name='apply_offer'),
     path('offer/<int:pk>/rate/', views.rate_offer, name='rate_offer'),
-    path('offer/<int:pk>/', views.home, name='offer_detail'), 
-    # Backward-compatible signup alias (defaults to needer flow)
+    path('offer/<int:pk>/', views.home, name='offer_detail'),
     path('signup/', views.signup_needer, name='signup'),
-    
-    # Fix for the 404 at /accounts/login/
     path('accounts/login/', auth_views.LoginView.as_view(), name='login'),
     path('accounts/', include('django.contrib.auth.urls')),
-    
     path('my-posts/', views.my_posts, name='my_posts'),
     path('application/<int:pk>/accept/', views.accept_application, name='accept_application'),
+    path('application/<int:pk>/reject/', views.reject_application, name='reject_application'),
+    path('application/<int:pk>/withdraw/', views.withdraw_application, name='withdraw_application'),
     path('my-jobs/', views.my_jobs, name='my_jobs'),
     path('dashboard/', views.dashboard, name='dashboard'),
     path('signup-needer/', views.signup_needer, name='signup_needer'),
     path('signup-worker/', views.signup_worker, name='signup_worker'),
+    path('profile/', views.profile, name='profile'),
+    path('profile/change/<str:field>/', views.profile_change, name='profile_change'),
 ]

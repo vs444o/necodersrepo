@@ -22,10 +22,7 @@
         align-items: center;
         justify-content: center;
     }
-    .btn-mic:hover {
-        background: #e9ecef;
-    }
-    /* Visual feedback when the AI is listening */
+    .btn-mic:hover { background: #e9ecef; }
     .btn-mic.listening {
         background: #ff4757;
         color: white;
@@ -33,9 +30,9 @@
         animation: pulse-red 1.5s infinite;
     }
     @keyframes pulse-red {
-        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 71, 87, 0.7); }
-        70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255, 71, 87, 0); }
-        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255, 71, 87, 0); }
+        0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,71,87,0.7); }
+        70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(255,71,87,0); }
+        100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(255,71,87,0); }
     }
     .elderly-select-label {
         font-size: 1.05rem;
@@ -65,6 +62,7 @@
         color: #44655f;
         font-weight: 600;
     }
+    #price-group { display: none; }
 </style>
 
 <section class="container page-header">
@@ -77,7 +75,7 @@
         {% csrf_token %}
 
         <div class="form-group">
-            <label for="title">От какво имате нужда?</label>
+            <label for="title">От какво имате нужда? *</label>
             <div class="voice-group">
                 <input id="title" type="text" name="title" required placeholder="Напишете или кажете накратко...">
                 <button type="button" class="btn-mic" onclick="runVoiceAI('title', event)" title="Кажете заглавието">🎤</button>
@@ -85,7 +83,7 @@
         </div>
 
         <div class="form-group">
-            <label for="description">Повече подробности</label>
+            <label for="description">Повече подробности *</label>
             <div class="voice-group">
                 <textarea id="description" name="description" rows="4" required placeholder="Опишете какво точно е нужно..."></textarea>
                 <button type="button" class="btn-mic" onclick="runVoiceAI('description', event)" title="Кажете описанието">🎤</button>
@@ -93,8 +91,8 @@
         </div>
 
         <div class="form-group">
-            <label for="category" class="elderly-select-label">Категория</label>
-            <select id="category" name="category" class="elderly-select">
+            <label for="category" class="elderly-select-label">Категория *</label>
+            <select id="category" name="category" class="elderly-select" required>
                 {% for val, label in categories %}
                     <option value="{{ val }}">{{ label }}</option>
                 {% endfor %}
@@ -103,26 +101,31 @@
         </div>
 
         <div class="form-group">
-            <label for="offer_type" class="elderly-select-label">Платена или доброволна помощ?</label>
-            <select id="offer_type" name="offer_type" class="elderly-select">
-                <option value="paid">Платена</option>
+            <label for="offer_type" class="elderly-select-label">Платена или доброволна помощ? *</label>
+            <select id="offer_type" name="offer_type" class="elderly-select" required>
                 <option value="volunteer">Доброволна</option>
+                <option value="paid">Платена</option>
             </select>
         </div>
 
-        <div class="form-group">
-            <label for="price">Цена (оставете празно при доброволна помощ)</label>
-            <input id="price" type="number" name="price" step="0.01">
-            <p class="help-text">Попълнете само ако изберете „Платена“.</p>
+        <div class="form-group" id="price-group">
+            <label for="price">Цена (лв.) *</label>
+            <div style="display:flex;align-items:center;gap:10px;">
+                <input id="price" type="number" name="price" min="0" step="1" value="0"
+                       style="flex:1;" placeholder="0">
+                <button type="button" onclick="document.getElementById('price').stepUp()"
+                        class="btn btn--secondary btn--sm" style="font-size:1.4rem;padding:0.4rem 0.9rem;">+</button>
+            </div>
+            <p class="help-text">Попълнете сумата, която предлагате за услугата.</p>
         </div>
 
         <div class="form-group">
-            <label for="city-input">Град</label>
+            <label for="city-input">Град / Село *</label>
             <input id="city-input" type="text" name="city" required placeholder="Например: София, Варна, Габрово">
         </div>
 
         <div class="form-group">
-            <label for="location-input">Адрес</label>
+            <label for="location-input">Адрес *</label>
             <input id="location-input" type="text" name="location" autocomplete="off" required value="{{ user.address }}">
             <input type="hidden" name="latitude" id="offer-latitude" value="{{ user.latitude }}">
             <input type="hidden" name="longitude" id="offer-longitude" value="{{ user.longitude }}">
@@ -138,64 +141,68 @@
 </section>
 
 <script>
-/**
- * VOICE AI SYSTEM
- * Integrated into your form fields
- */
+// Show/hide price field based on offer type
+const offerTypeSelect = document.getElementById('offer_type');
+const priceGroup = document.getElementById('price-group');
+const priceInput = document.getElementById('price');
+
+function togglePrice() {
+    if (offerTypeSelect.value === 'paid') {
+        priceGroup.style.display = 'block';
+        priceInput.required = true;
+        priceInput.min = "1";
+    } else {
+        priceGroup.style.display = 'none';
+        priceInput.required = false;
+        priceInput.value = '';
+    }
+}
+offerTypeSelect.addEventListener('change', togglePrice);
+togglePrice();
+
+// Voice input
 function runVoiceAI(targetId, event) {
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) {
         alert("Гласовото въвеждане не се поддържа в този браузър. Моля, опитайте с Chrome.");
         return;
     }
-
     const recognition = new SpeechRecognition();
     const btn = event.currentTarget;
     const targetInput = document.getElementById(targetId);
-
-    // Using 'bg-BG' for Bulgarian speech recognition
-    recognition.lang = 'bg-BG'; 
+    recognition.lang = 'bg-BG';
     recognition.interimResults = false;
-
     recognition.onstart = () => btn.classList.add('listening');
     recognition.onend = () => btn.classList.remove('listening');
-    
     recognition.onresult = (event) => {
         const transcript = event.results[0][0].transcript;
         if (targetInput.tagName === "TEXTAREA") {
-            // Append text for description so the user can speak multiple times
             targetInput.value += (targetInput.value ? " " : "") + transcript;
         } else {
-            // Overwrite text for the title for a cleaner result
             targetInput.value = transcript;
         }
     };
-
     recognition.onerror = (e) => {
         console.error("Speech AI Error: ", e.error);
         btn.classList.remove('listening');
     };
-
     recognition.start();
 }
 
-/**
- * Address selection (Google Places only)
- */
+// Google Places autocomplete — auto-fills city from address
 (() => {
     const form = document.getElementById("post-offer-form");
     const locationInput = document.getElementById("location-input");
     const latInput = document.getElementById("offer-latitude");
     const lngInput = document.getElementById("offer-longitude");
+    const cityInput = document.getElementById("city-input");
     const note = document.getElementById("location-note");
     const googleApiKey = "{{ google_maps_api_key|default:''|escapejs }}";
 
     const activateGooglePlaces = () => {
-        note.textContent = "Показваме предложения за адрес (Google Maps).";
-
         const autocomplete = new google.maps.places.Autocomplete(locationInput, {
             componentRestrictions: { country: "bg" },
-            fields: ["formatted_address", "geometry"],
+            fields: ["formatted_address", "geometry", "address_components"],
             types: ["address"],
         });
 
@@ -211,6 +218,15 @@ function runVoiceAI(targetId, event) {
             latInput.value = Number(place.geometry.location.lat()).toFixed(6);
             lngInput.value = Number(place.geometry.location.lng()).toFixed(6);
             note.textContent = "Адресът е запазен.";
+
+            // Auto-fill city from address components
+            const components = place.address_components || [];
+            const cityComponent = components.find(c =>
+                c.types.includes('locality') || c.types.includes('postal_town')
+            );
+            if (cityComponent && cityInput) {
+                cityInput.value = cityComponent.long_name;
+            }
         });
 
         locationInput.addEventListener("input", () => {
@@ -224,7 +240,7 @@ function runVoiceAI(targetId, event) {
             if (!hasAddress) return;
             if (!hasCoords) {
                 e.preventDefault();
-                note.textContent = "Моля, изберете адрес от предложенията, за да запазим точната локация.";
+                note.textContent = "Моля, изберете адрес от предложенията.";
             }
         });
     };
@@ -236,19 +252,14 @@ function runVoiceAI(targetId, event) {
                     activateGooglePlaces();
                     return;
                 }
-            } catch (e) {
-                // ignore
-            }
-            note.textContent = "Google Maps не се зареди. Проверете ключа и настройките (Places API).";
+            } catch (e) {}
+            note.textContent = "Google Maps не се зареди.";
         };
-
         const script = document.createElement("script");
         script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleApiKey)}&libraries=places&callback=__initPostOfferGooglePlaces`;
         script.async = true;
         script.defer = true;
-        script.onerror = () => {
-            note.textContent = "Google Maps не се зареди. Проверете ключа и настройките (Places API).";
-        };
+        script.onerror = () => { note.textContent = "Google Maps не се зареди."; };
         document.head.appendChild(script);
     } else {
         note.textContent = "Липсва Google Maps API ключ.";

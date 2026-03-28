@@ -16,7 +16,9 @@
             {% endif %}
 
             {% if user.is_authenticated %}
-                <span class="user-pill">{{ user.username }} ({% if user.user_type == 'worker' %}Доброволец{% else %}Търся помощ{% endif %})</span>
+                <a href="{% url 'profile' %}" class="user-pill" style="text-decoration:none;">
+                    👤 {{ user.username }} ({% if user.user_type == 'worker' %}Доброволец{% else %}Търся помощ{% endif %})
+                </a>
                 <form action="{% url 'logout' %}" method="post" class="nav-logout-form">
                     {% csrf_token %}
                     <button type="submit" class="btn btn--secondary btn--sm">Изход</button>

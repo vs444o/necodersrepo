@@ -1,13 +1,14 @@
 from django.contrib.auth.decorators import login_required
-from django.contrib.auth import login
+from django.contrib.auth import login, update_session_auth_hash
 from django.shortcuts import get_object_or_404, redirect, render
 from django.http import HttpResponseForbidden
 from django.utils import timezone
 from django.conf import settings
 from django.views.decorators.http import require_POST
 from django.db.models import Avg
+from django.contrib import messages
 from .forms import NeederSignupForm, WorkerSignupForm
-from .models import Offer, Application, Notification, Rating
+from .models import Offer, Application, Notification, Rating, WorkerProfile
 
 
 def home(request):
@@ -46,27 +47,34 @@ def post_offer(request):
         lat = request.POST.get('latitude')
         lng = request.POST.get('longitude')
         location = (request.POST.get('location') or '').strip()
+        offer_type = request.POST.get('offer_type')
+        price = None
+        if offer_type == 'paid':
+            price = request.POST.get('price') or None
+
         if location and (not lat or not lng):
             return render(request, 'offers/post_offer.html', {
                 'categories': Offer.CATEGORY_CHOICES,
                 'google_maps_api_key': settings.GOOGLE_MAPS_API_KEY,
-                'error': 'Pick an address from Google suggestions so we can save the exact location.',
+                'error': 'Моля, изберете адрес от предложенията.',
             })
+
         Offer.objects.create(
             name=request.user.username,
             created_by=request.user,
             title=request.POST['title'],
             description=request.POST['description'],
             category=request.POST['category'],
-            offer_type=request.POST['offer_type'],
-            price=request.POST.get('price') or None,
+            offer_type=offer_type,
+            price=price,
             location=location,
-            city=request.POST.get('city'),
+            city=request.POST.get('city', ''),
             latitude=round(float(lat), 6) if lat else None,
             longitude=round(float(lng), 6) if lng else None,
             status='waiting',
         )
         return redirect('home')
+
     return render(request, 'offers/post_offer.html', {
         'categories': Offer.CATEGORY_CHOICES,
         'google_maps_api_key': settings.GOOGLE_MAPS_API_KEY,
@@ -145,6 +153,7 @@ def dashboard(request):
         'avg_rating': avg_rating,
     })
 
+
 @login_required
 def apply_offer(request, pk):
     if request.method != 'POST':
@@ -156,7 +165,7 @@ def apply_offer(request, pk):
     if created and offer.created_by:
         Notification.objects.create(
             user=offer.created_by,
-            message=f"{request.user.username} applied for: {offer.title}",
+            message=f"{request.user.username} кандидатства за: {offer.title}",
         )
     return redirect('dashboard')
 
@@ -194,9 +203,41 @@ def accept_application(request, pk):
 
     Notification.objects.create(
         user=application.worker,
-        message=f"You were accepted for: {offer.title}!",
+        message=f"Приети сте за: {offer.title}! Телефон на търсещия помощ: {offer.created_by.phone}",
     )
     return redirect('home')
+
+
+@login_required
+def reject_application(request, pk):
+    if request.method != 'POST':
+        return redirect('my_posts')
+    application = get_object_or_404(Application, pk=pk)
+    offer = application.offer
+    if offer.created_by != request.user:
+        return HttpResponseForbidden()
+    application.status = 'rejected'
+    application.save(update_fields=['status'])
+    Notification.objects.create(
+        user=application.worker,
+        message=f"Кандидатурата ви за \"{offer.title}\" беше отхвърлена.",
+    )
+    return redirect('my_posts')
+
+
+@login_required
+def withdraw_application(request, pk):
+    if request.method != 'POST':
+        return redirect('my_jobs')
+    application = get_object_or_404(Application, pk=pk, worker=request.user)
+    offer = application.offer
+    if offer.status == 'accepted' and offer.accepted_by == request.user:
+        offer.status = 'waiting'
+        offer.accepted_by = None
+        offer.save(update_fields=['status', 'accepted_by'])
+    application.delete()
+    messages.success(request, 'Оттеглихте кандидатурата си успешно.')
+    return redirect('my_jobs')
 
 
 @login_required
@@ -207,7 +248,9 @@ def complete_offer(request, pk):
     if offer.accepted_by != request.user:
         return HttpResponseForbidden()
     offer.status = 'completed'
-    offer.save(update_fields=['status'])
+    offer.completed_at = timezone.now()
+    offer.completed_by = request.user
+    offer.save(update_fields=['status', 'completed_at', 'completed_by'])
     return redirect('my_jobs')
 
 
@@ -222,9 +265,12 @@ def my_posts(request):
         .order_by('-created_at')
     )
     rated_offer_ids = set(Rating.objects.filter(needer=request.user).values_list('offer_id', flat=True))
+    unread = list(request.user.notifications.filter(read=False))
+    request.user.notifications.filter(read=False).update(read=True)
     return render(request, 'offers/my_posts.html', {
         'offers': offers,
         'rated_offer_ids': rated_offer_ids,
+        'unread': unread,
     })
 
 
@@ -232,8 +278,18 @@ def my_posts(request):
 def my_jobs(request):
     if request.user.user_type != 'worker':
         return HttpResponseForbidden()
-    applications = Application.objects.filter(worker=request.user).select_related('offer').order_by('-created_at')
-    return render(request, 'offers/my_jobs.html', {'applications': applications})
+    applications = (
+        Application.objects
+        .filter(worker=request.user)
+        .select_related('offer')
+        .order_by('-created_at')
+    )
+    unread = list(request.user.notifications.filter(read=False))
+    request.user.notifications.filter(read=False).update(read=True)
+    return render(request, 'offers/my_jobs.html', {
+        'applications': applications,
+        'unread': unread,
+    })
 
 
 @login_required
@@ -255,18 +311,78 @@ def rate_offer(request, pk):
         worker=offer.accepted_by,
         needer=request.user,
         performance=perf,
-        behaviour=beh, # Fixed spelling here
+        behaviour=beh,
         speed=spd,
         overall_score=round((perf + beh + spd) / 3, 1)
     )
     return redirect('home')
 
 
+@login_required
+def profile(request):
+    return render(request, 'offers/profile.html')
+
+
+@login_required
+def profile_change(request, field):
+    if request.method != 'POST':
+        return redirect('profile')
+
+    value1 = request.POST.get('value1', '').strip()
+    value2 = request.POST.get('value2', '').strip()
+
+    if field == 'password':
+        old_password = request.POST.get('old_password', '')
+        if not request.user.check_password(old_password):
+            messages.error(request, 'Грешна стара парола.')
+            return redirect('profile')
+        if value1 != value2:
+            messages.error(request, 'Новите пароли не съвпадат.')
+            return redirect('profile')
+        request.user.set_password(value1)
+        request.user.save()
+        update_session_auth_hash(request, request.user)
+        messages.success(request, 'Паролата е сменена успешно.')
+        return redirect('profile')
+
+    if value1 != value2:
+        messages.error(request, 'Стойностите не съвпадат.')
+        return redirect('profile')
+
+    if field == 'username':
+        request.user.username = value1
+        request.user.save()
+    elif field == 'email':
+        request.user.email = value1
+        request.user.save()
+    elif field == 'address':
+        request.user.address = value1
+        request.user.save()
+    elif field == 'phone':
+        if request.user.user_type == 'worker':
+            prof, _ = WorkerProfile.objects.get_or_create(user=request.user)
+            prof.phone = value1
+            prof.save()
+        else:
+            request.user.phone = value1
+            request.user.save()
+    elif field == 'skills':
+        if request.user.user_type == 'worker':
+            prof, _ = WorkerProfile.objects.get_or_create(user=request.user)
+            prof.skills = value1
+            prof.save()
+
+    messages.success(request, 'Промяната е запазена успешно.')
+    return redirect('profile')
+
+
 def signup_needer(request):
     if request.method == 'POST':
         form = NeederSignupForm(request.POST)
         if form.is_valid():
-            user = form.save()
+            user = form.save(commit=False)
+            user.phone = request.POST.get('phone', '')
+            user.save()
             login(request, user)
             return redirect('home')
     else:
@@ -276,6 +392,8 @@ def signup_needer(request):
         'google_maps_api_key': settings.GOOGLE_MAPS_API_KEY,
         'signup_kind': 'needer',
     })
+
+
 def signup_worker(request):
     if request.method == 'POST':
         form = WorkerSignupForm(request.POST)

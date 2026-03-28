@@ -1,0 +1,133 @@
+{% extends "base.html" %}
+{% block title %}Моят профил · HelpNow{% endblock %}
+
+{% block content %}
+<section class="container page-header">
+    <h1>Моят профил</h1>
+    <p>Преглеждайте и променяйте личните си данни.</p>
+</section>
+
+<section class="container" style="max-width:680px;">
+
+    {% if messages %}
+        {% for msg in messages %}
+        <div style="background:#e8f4fd;border-left:4px solid #3b82f6;padding:1rem;margin-bottom:1rem;border-radius:8px;font-size:1.1rem;font-weight:700;">
+            ✅ {{ msg }}
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <!-- USERNAME -->
+    <article class="card" style="margin-bottom:1.5rem;">
+        <h2 style="margin-top:0;">Потребителско име</h2>
+        <p style="font-size:1.3rem;font-weight:800;">{{ user.username }}</p>
+        <details>
+            <summary class="btn btn--secondary btn--sm" style="display:inline-block;cursor:pointer;margin-top:0.5rem;">Промени</summary>
+            <form method="post" action="{% url 'profile_change' 'username' %}" style="margin-top:1rem;">
+                {% csrf_token %}
+                <label style="font-weight:700;display:block;margin-bottom:0.4rem;">Ново потребителско име *</label>
+                <input type="text" name="value1" required style="width:100%;margin-bottom:0.75rem;">
+                <label style="font-weight:700;display:block;margin-bottom:0.4rem;">Повторете *</label>
+                <input type="text" name="value2" required style="width:100%;margin-bottom:0.75rem;">
+                <button type="submit" class="btn btn--primary">Запази</button>
+            </form>
+        </details>
+    </article>
+
+    <!-- EMAIL -->
+    <article class="card" style="margin-bottom:1.5rem;">
+        <h2 style="margin-top:0;">Имейл</h2>
+        <p style="font-size:1.3rem;font-weight:800;">{{ user.email|default:"Не е въведен" }}</p>
+        <details>
+            <summary class="btn btn--secondary btn--sm" style="display:inline-block;cursor:pointer;margin-top:0.5rem;">Промени</summary>
+            <form method="post" action="{% url 'profile_change' 'email' %}" style="margin-top:1rem;">
+                {% csrf_token %}
+                <label style="font-weight:700;display:block;margin-bottom:0.4rem;">Нов имейл *</label>
+                <input type="email" name="value1" required style="width:100%;margin-bottom:0.75rem;">
+                <label style="font-weight:700;display:block;margin-bottom:0.4rem;">Повторете *</label>
+                <input type="email" name="value2" required style="width:100%;margin-bottom:0.75rem;">
+                <button type="submit" class="btn btn--primary">Запази</button>
+            </form>
+        </details>
+    </article>
+
+    <!-- PHONE -->
+    <article class="card" style="margin-bottom:1.5rem;">
+        <h2 style="margin-top:0;">Телефон</h2>
+        <p style="font-size:1.3rem;font-weight:800;">
+            {% if user.user_type == 'worker' %}
+                {{ user.worker_profile.phone|default:"Не е въведен" }}
+            {% else %}
+                {{ user.phone|default:"Не е въведен" }}
+            {% endif %}
+        </p>
+        <details>
+            <summary class="btn btn--secondary btn--sm" style="display:inline-block;cursor:pointer;margin-top:0.5rem;">Промени</summary>
+            <form method="post" action="{% url 'profile_change' 'phone' %}" style="margin-top:1rem;">
+                {% csrf_token %}
+                <label style="font-weight:700;display:block;margin-bottom:0.4rem;">Нов телефон *</label>
+                <input type="tel" name="value1" required style="width:100%;margin-bottom:0.75rem;">
+                <label style="font-weight:700;display:block;margin-bottom:0.4rem;">Повторете *</label>
+                <input type="tel" name="value2" required style="width:100%;margin-bottom:0.75rem;">
+                <button type="submit" class="btn btn--primary">Запази</button>
+            </form>
+        </details>
+    </article>
+
+    <!-- ADDRESS -->
+    <article class="card" style="margin-bottom:1.5rem;">
+        <h2 style="margin-top:0;">Адрес</h2>
+        <p style="font-size:1.3rem;font-weight:800;">{{ user.address|default:"Не е въведен" }}</p>
+        <details>
+            <summary class="btn btn--secondary btn--sm" style="display:inline-block;cursor:pointer;margin-top:0.5rem;">Промени</summary>
+            <form method="post" action="{% url 'profile_change' 'address' %}" style="margin-top:1rem;">
+                {% csrf_token %}
+                <label style="font-weight:700;display:block;margin-bottom:0.4rem;">Нов адрес *</label>
+                <input type="text" name="value1" required style="width:100%;margin-bottom:0.75rem;">
+                <label style="font-weight:700;display:block;margin-bottom:0.4rem;">Повторете *</label>
+                <input type="text" name="value2" required style="width:100%;margin-bottom:0.75rem;">
+                <button type="submit" class="btn btn--primary">Запази</button>
+            </form>
+        </details>
+    </article>
+
+    {% if user.user_type == 'worker' %}
+    <!-- SKILLS -->
+    <article class="card" style="margin-bottom:1.5rem;">
+        <h2 style="margin-top:0;">Умения</h2>
+        <p style="font-size:1.3rem;font-weight:800;">{{ user.worker_profile.skills|default:"Не са въведени" }}</p>
+        <details>
+            <summary class="btn btn--secondary btn--sm" style="display:inline-block;cursor:pointer;margin-top:0.5rem;">Промени</summary>
+            <form method="post" action="{% url 'profile_change' 'skills' %}" style="margin-top:1rem;">
+                {% csrf_token %}
+                <label style="font-weight:700;display:block;margin-bottom:0.4rem;">Нови умения *</label>
+                <textarea name="value1" required rows="3" style="width:100%;margin-bottom:0.75rem;"></textarea>
+                <label style="font-weight:700;display:block;margin-bottom:0.4rem;">Повторете *</label>
+                <textarea name="value2" required rows="3" style="width:100%;margin-bottom:0.75rem;"></textarea>
+                <button type="submit" class="btn btn--primary">Запази</button>
+            </form>
+        </details>
+    </article>
+    {% endif %}
+
+    <!-- PASSWORD -->
+    <article class="card" style="margin-bottom:1.5rem;">
+        <h2 style="margin-top:0;">Парола</h2>
+        <p style="font-size:1.3rem;font-weight:800;">••••••••</p>
+        <details>
+            <summary class="btn btn--secondary btn--sm" style="display:inline-block;cursor:pointer;margin-top:0.5rem;">Промени</summary>
+            <form method="post" action="{% url 'profile_change' 'password' %}" style="margin-top:1rem;">
+                {% csrf_token %}
+                <label style="font-weight:700;display:block;margin-bottom:0.4rem;">Стара парола *</label>
+                <input type="password" name="old_password" required style="width:100%;margin-bottom:0.75rem;">
+                <label style="font-weight:700;display:block;margin-bottom:0.4rem;">Нова парола *</label>
+                <input type="password" name="value1" required style="width:100%;margin-bottom:0.75rem;">
+                <label style="font-weight:700;display:block;margin-bottom:0.4rem;">Повторете новата парола *</label>
+                <input type="password" name="value2" required style="width:100%;margin-bottom:0.75rem;">
+                <button type="submit" class="btn btn--primary">Запази</button>
+            </form>
+        </details>
+    </article>
+
+</section>
+{% endblock %}

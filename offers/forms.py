@@ -11,7 +11,6 @@ class BaseSignupForm(UserCreationForm):
 
     class Meta(UserCreationForm.Meta):
         model = User
-        # NOTE: user_type removed here
         fields = UserCreationForm.Meta.fields + ('email', 'address', 'latitude', 'longitude')
         widgets = {
             'address': forms.TextInput(attrs={
@@ -51,35 +50,34 @@ class BaseSignupForm(UserCreationForm):
 
         return cleaned_data
 
-    def full_clean(self):
-        super().full_clean()
-        if 'password1' in self._errors:
-            new_pw_errors = [
-                error for error in self._errors['password1']
-                if "match" in str(error).lower() or "too short" in str(error).lower()
-            ]
-            if not new_pw_errors:
-                del self._errors['password1']
-            else:
-                self._errors['password1'] = new_pw_errors
-
 
 class NeederSignupForm(BaseSignupForm):
+    email = forms.EmailField(required=True, label='Имейл')
+
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.user_type = 'needer'  # force role here
+        user.user_type = 'needer'
         if commit:
             user.save()
         return user
 
 
 class WorkerSignupForm(BaseSignupForm):
-    phone = forms.CharField(max_length=30, required=False)
-    skills = forms.CharField(widget=forms.Textarea(attrs={'rows': 3}), required=False)
+    phone = forms.CharField(
+        max_length=30,
+        required=True,
+        label='Телефон',
+        widget=forms.TextInput(attrs={'placeholder': '+359...'})
+    )
+    skills = forms.CharField(
+        required=True,
+        label='Умения',
+        widget=forms.Textarea(attrs={'rows': 3, 'placeholder': 'Опишете вашите умения...'})
+    )
 
     def save(self, commit=True):
         user = super().save(commit=False)
-        user.user_type = 'worker'  # force role here
+        user.user_type = 'worker'
         if commit:
             user.save()
             WorkerProfile.objects.create(
