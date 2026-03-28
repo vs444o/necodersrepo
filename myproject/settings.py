@@ -28,6 +28,23 @@ DEBUG = True
 
 ALLOWED_HOSTS = []
 
+EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
+
+# Brevo: https://app.brevo.com/settings/keys/smtp
+# SMTP user must be the "SMTP login" that belongs to the SAME xsmtpsib- key you use
+# (usually your Brevo sign-in email). Do not use a random xxxx@smtp-brevo.com address
+# unless the dashboard shows that exact login for your current key. Password is the
+# SMTP key (xsmtpsib-...), not your Brevo login password. For "From", use a verified sender.
+EMAIL_HOST = "smtp-relay.brevo.com"
+EMAIL_PORT = 587
+EMAIL_HOST_USER = os.environ.get("BREVO_SMTP_USER", "").strip()
+EMAIL_HOST_PASSWORD = os.environ.get("BREVO_SMTP_PASSWORD", "").strip()
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
+
+# If 587 fails on your network, try: PORT 465, USE_TLS False, USE_SSL True
+DEFAULT_FROM_EMAIL = os.environ.get("BREVO_FROM_EMAIL", "").strip() or EMAIL_HOST_USER
+SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
 # Application definition
 

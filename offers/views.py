@@ -8,7 +8,7 @@ from django.views.decorators.http import require_POST
 from django.db.models import Avg
 from .forms import NeederSignupForm, WorkerSignupForm
 from .models import Offer, Application, Notification, Rating
-
+from .emails import send_notification_email
 
 def home(request):
     if request.user.is_authenticated and request.user.user_type == 'worker':
@@ -154,10 +154,12 @@ def apply_offer(request, pk):
         return HttpResponseForbidden()
     application, created = Application.objects.get_or_create(offer=offer, worker=request.user)
     if created and offer.created_by:
+        notif_text = f"{request.user.username} applied for: {offer.title}"
         Notification.objects.create(
             user=offer.created_by,
-            message=f"{request.user.username} applied for: {offer.title}",
+            message=notif_text,
         )
+        send_notification_email(offer.created_by, notif_text)
     return redirect('dashboard')
 
 
@@ -196,6 +198,7 @@ def accept_application(request, pk):
         user=application.worker,
         message=f"You were accepted for: {offer.title}!",
     )
+    send_notification_email(application.worker, f"You were accepted for: {offer.title}!")
     return redirect('home')
 
 
