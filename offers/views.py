@@ -9,7 +9,7 @@ from django.db.models import Avg
 from django.contrib import messages
 from .forms import NeederSignupForm, WorkerSignupForm
 from .models import Offer, Application, Notification, Rating, WorkerProfile
-
+from .emails import send_notification_email
 
 def home(request):
     if request.user.is_authenticated and request.user.user_type == 'worker':
@@ -163,10 +163,12 @@ def apply_offer(request, pk):
         return HttpResponseForbidden()
     application, created = Application.objects.get_or_create(offer=offer, worker=request.user)
     if created and offer.created_by:
+        notif_text = f"{request.user.username} applied for: {offer.title}"
         Notification.objects.create(
             user=offer.created_by,
             message=f"{request.user.username} кандидатства за: {offer.title}",
         )
+        send_notification_email(offer.created_by, notif_text)
     return redirect('dashboard')
 
 
@@ -205,6 +207,7 @@ def accept_application(request, pk):
         user=application.worker,
         message=f"Приети сте за: {offer.title}! Телефон на търсещия помощ: {offer.created_by.phone}",
     )
+    send_notification_email(application.worker, f"You were accepted for: {offer.title}!")
     return redirect('home')
 
 
