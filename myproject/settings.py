@@ -13,28 +13,19 @@ https://docs.djangoproject.com/en/6.0/ref/settings/
 import os
 from pathlib import Path
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/6.0/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = 'django-insecure--z5a2b74cccujuf#*ev+p6pb1*#=u6gy^n@ux*mga18nsm)ae@'
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
 ALLOWED_HOSTS = []
 
 EMAIL_BACKEND = "django.core.mail.backends.smtp.EmailBackend"
 
-# Brevo: https://app.brevo.com/settings/keys/smtp
-# SMTP user must be the "SMTP login" that belongs to the SAME xsmtpsib- key you use
-# (usually your Brevo sign-in email). Do not use a random xxxx@smtp-brevo.com address
-# unless the dashboard shows that exact login for your current key. Password is the
-# SMTP key (xsmtpsib-...), not your Brevo login password. For "From", use a verified sender.
+
 EMAIL_HOST = "smtp-relay.brevo.com"
 EMAIL_PORT = 587
 EMAIL_HOST_USER = os.environ.get("BREVO_SMTP_USER", "").strip()
@@ -42,11 +33,9 @@ EMAIL_HOST_PASSWORD = os.environ.get("BREVO_SMTP_PASSWORD", "").strip()
 EMAIL_USE_TLS = True
 EMAIL_USE_SSL = False
 
-# If 587 fails on your network, try: PORT 465, USE_TLS False, USE_SSL True
 DEFAULT_FROM_EMAIL = os.environ.get("BREVO_FROM_EMAIL", "").strip() or EMAIL_HOST_USER
 SERVER_EMAIL = DEFAULT_FROM_EMAIL
 
-# Application definition
 
 INSTALLED_APPS = [
     'django.contrib.admin',
@@ -93,8 +82,6 @@ LOGOUT_REDIRECT_URL = 'home'
 WSGI_APPLICATION = 'myproject.wsgi.application'
 
 
-# Database
-# https://docs.djangoproject.com/en/6.0/ref/settings/#databases
 
 DATABASES = {
     'default': {
@@ -104,8 +91,6 @@ DATABASES = {
 }
 
 
-# Password validation
-# https://docs.djangoproject.com/en/6.0/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -121,8 +106,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/6.0/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
 
@@ -133,8 +116,6 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
 STATICFILES_DIRS = [BASE_DIR / 'offers' / 'static']

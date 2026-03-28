@@ -118,18 +118,18 @@ a {
     padding: 0.3rem 0.7rem;
     font-size: 1rem;
 }
-/* 1. Push the Leaflet UI layers down */
+
 .leaflet-control-container .leaflet-top, 
 .leaflet-control-container .leaflet-bottom {
     z-index: 500 !important;
 }
 
-/* 2. Make the zoom buttons below */
+
 .leaflet-control-zoom {
     z-index: 500 !important;
 }
 
-/* 3. Make the navbar on top */
+
 .navbar {
     position: sticky;
     top: 0;
@@ -431,7 +431,7 @@ a {
     transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
 }
 
-/* Specific styling for the range sliders (Rating system) */
+
 .app-form input[type="range"] {
     -webkit-appearance: none;
     width: 100%;
@@ -578,7 +578,7 @@ a {
     border-color: #5ab8b0;
 }
 
-/* Google Places Autocomplete dropdown (pac-*) */
+
 .pac-container {
     border: 2px solid var(--border) !important;
     border-radius: 14px !important;
@@ -587,7 +587,7 @@ a {
     font-family: inherit !important;
     padding: 0.35rem !important;
     margin-top: 0.35rem !important;
-    z-index: 10000 !important; /* above sticky nav / modals */
+    z-index: 10000 !important; 
 }
 
 .pac-item {
